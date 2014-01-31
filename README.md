@@ -13,10 +13,9 @@ additionally clustering points into a grid for performance.
 L.heatLayer(latlngs, {radius: 25}).addTo(map);
 ```
 
-## Including the plugin
+To include the plugin, just use `leaflet-heat.js` from the `dist` folder:
 
 ```html
-<script src="simpleheat.js"></script>
 <script src="leaflet-heat.js"></script>
 ```
 
