@@ -27,7 +27,19 @@
   },
   "jshintConfig": {
     "quotmark": "single",
-    "strict": true,
+    "globals": {
+      "L": true,
+      "simpleheat": true
+    },
+    "trailing": true,
+    "camelcase": true,
+    "curly": true,
+    "eqeqeq": true,
+    "noempty": true,
+    "nonbsp": true,
+    "undef": true,
+    "unused": true,
+    "browser": true,
     "trailing": true
   }
 }
