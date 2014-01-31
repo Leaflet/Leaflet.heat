@@ -2,7 +2,9 @@
 L.HeatLayer = L.Class.extend({
 
     options: {
-        // maxZoom: 18
+        // maxZoom: 18,
+        // radius: 25,
+        // blur: 15
     },
 
     initialize: function (latlngs, options) {
@@ -54,7 +56,7 @@ L.HeatLayer = L.Class.extend({
         L.DomUtil.addClass(canvas, 'leaflet-zoom-' + (animated ? 'animated' : 'hide'));
 
         this._heat = simpleheat(canvas);
-        this._heat.radius(this._heat.defaultRadius);
+        this._heat.radius(this.options.radius || this._heat.defaultRadius, this.options.blur);
     },
 
     _reset: function () {
@@ -141,6 +143,6 @@ L.HeatLayer = L.Class.extend({
     }
 });
 
-L.heatLayer = function (latlngs) {
-    return new L.HeatLayer(latlngs);
+L.heatLayer = function (latlngs, options) {
+    return new L.HeatLayer(latlngs, options);
 };
