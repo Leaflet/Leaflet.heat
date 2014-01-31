@@ -2,7 +2,7 @@ Leaflet.heat
 ==========
 
 A tiny, simple and fast [Leaflet](http://leafletjs.com) heatmap plugin.
-Uses [simpleheat](https://github.com/pa7/heatmap.js) under the hood,
+Uses [simpleheat](https://github.com/mourner/simpleheat) under the hood,
 additionally clustering points into a grid for performance.
 
 [Demo (10,000 points) &rarr;](http://leaflet.github.io/Leaflet.heat/demo)
