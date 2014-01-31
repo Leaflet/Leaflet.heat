@@ -1,0 +1,33 @@
+{
+  "name": "leaflet.heat",
+  "version": "0.0.1",
+  "description": "A tiny and fast Leaflet heatmap plugin.",
+  "homepage": "https://github.com/Leaflet/Leaflet.heat",
+  "keywords": [
+    "heatmap",
+    "canvas",
+    "visualization",
+    "gis",
+    "leaflet",
+    "plugin"
+  ],
+  "author": "Vladimir Agafonkin",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Leaflet/Leaflet.heat.git"
+  },
+  "main": "dist/leaflet-heat.js",
+  "devDependencies": {
+    "simpleheat": "~0.2.0",
+    "uglify-js": "~2.4.12"
+  },
+  "scripts": {
+    "test": "jshint src",
+    "prepublish": "uglifyjs node_modules/simpleheat/simpleheat.js src/HeatLayer.js -c -m --comments /Vladimir/ -o dist/leaflet-heat.js"
+  },
+  "jshintConfig": {
+    "quotmark": "single",
+    "strict": true,
+    "trailing": true
+  }
+}
