@@ -1,3 +1,8 @@
+/*
+ (c) 2014, Vladimir Agafonkin
+ Leaflet.heat, a tiny and fast heatmap plugin for Leaflet.
+ https://github.com/Leaflet/Leaflet.heat
+*/
 
 L.HeatLayer = L.Class.extend({
 
@@ -96,8 +101,8 @@ L.HeatLayer = L.Class.extend({
         for (i = 0, len = this._latlngs.length; i < len; i++) {
             if (bounds.contains(this._latlngs[i])) {
                 p = this._map.latLngToContainerPoint(this._latlngs[i]);
-                x = Math.round((p.x - offsetX) / cellSize) + 2;
-                y = Math.round((p.y - offsetY) / cellSize) + 2;
+                x = Math.floor((p.x - offsetX) / cellSize) + 2;
+                y = Math.floor((p.y - offsetY) / cellSize) + 2;
 
                 grid[y] = grid[y] || [];
                 cell = grid[y][x];
