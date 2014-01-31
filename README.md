@@ -5,8 +5,30 @@ A tiny, simple and fast [Leaflet](http://leafletjs.com) heatmap plugin.
 Uses [simpleheat](https://github.com/pa7/heatmap.js) under the hood,
 additionally clustering points into a grid for performance.
 
-Demo (10,000 points): http://leaflet.github.io/Leaflet.heat/demo
+[Demo (10,000 points) &rarr;](http://leaflet.github.io/Leaflet.heat/demo)
+
+## Basic Usage
 
 ```js
-var heat = L.heatLayer(latlngs).addTo(map);
+L.heatLayer(latlngs, {radius: 25}).addTo(map);
 ```
+
+## Including the plugin
+
+```html
+<script src="simpleheat.js"></script>
+<script src="leaflet-heat.js"></script>
+```
+
+## Reference
+
+```js
+L.heatLayer(latlngs, options);
+```
+
+Constructs a heatmap layer given an array of `LatLng` points and an object with the following options:
+
+- **maxZoom** - zoom level where the points reach maximum intensity (as intensity scales with zoom),
+  equals `maxZoom` of the map by default
+- **radius** - radius of each "point" of the heatmap, `25` by default
+- **blur** - amount of blur, `15` by default
