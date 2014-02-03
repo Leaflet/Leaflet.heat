@@ -36,10 +36,17 @@ var tiles = L.tileLayer('http://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png', {
     id: 'examples.map-20v6611k'
 }).addTo(map);
 
-var heat = L.heatLayer(addressPoints).addTo(map);
+var heat = L.heatLayer(addressPoints).addTo(map),
+    draw = true;
 
-map.on('mousemove', function (e) {
-    heat.addLatLng(e.latlng);
+map.on({
+    movestart: function () { draw = false; },
+    moveend:   function () { draw = true; },
+    mousemove: function (e) {
+        if (draw) {
+            heat.addLatLng(e.latlng);
+        }
+    }
 })
 
 </script>
