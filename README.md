@@ -35,9 +35,10 @@ Constructs a heatmap layer given an array of `LatLng` points and an object with 
 
 - **maxZoom** - zoom level where the points reach maximum intensity (as intensity scales with zoom),
   equals `maxZoom` of the map by default
+- **max** - maximum point intensity, `1.0` by default
 - **radius** - radius of each "point" of the heatmap, `25` by default
 - **blur** - amount of blur, `15` by default
-- **max** - maximum point intensity, `1` by default.
+- **gradient** - color gradient config, e.g. `{0.4: 'blue', 0.65: 'lime', 1: 'red'}`
 
 ```js
 heat.setOptions(options);
@@ -70,6 +71,7 @@ Redraws the heatmap.
 
 - Added `addLatLng`, `setLatlngs`, `setOptions` and `redraw` methods.
 - Added `max` option and support for different point intensity values (through `LatLng` third argument).
+- Added `gradient` option to customize colors.
 
 #### 0.0.1 &mdash; Jan 31, 2014
 
