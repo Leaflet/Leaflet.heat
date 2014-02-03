@@ -66,7 +66,7 @@ Redraws the heatmap.
 
 ## Changelog
 
-#### 0.0.2 &mdash; Feb 3, 2014
+#### 0.1.0 &mdash; Feb 3, 2014
 
 - Added `addLatLng`, `setLatlngs`, `setOptions` and `redraw` methods.
 - Added `max` option and support for different point intensity values (through `LatLng` third argument).
