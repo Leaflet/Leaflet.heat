@@ -23,14 +23,6 @@ L.HeatLayer = L.Class.extend({
         return this.redraw();
     },
 
-    setMax: function (max) {
-        this._max = max;
-        if (this._heat) {
-            this._heat.max(max);
-        }
-        return this.redraw();
-    },
-
     addLatLng: function (latlng) {
         this._latlngs.push(latlng);
         return this.redraw();
@@ -38,7 +30,9 @@ L.HeatLayer = L.Class.extend({
 
     setOptions: function (options) {
         L.setOptions(this, options);
-        this._updateOptions();
+        if (this._heat) {
+            this._updateOptions();
+        }
         return this.redraw();
     },
 
@@ -93,9 +87,6 @@ L.HeatLayer = L.Class.extend({
         L.DomUtil.addClass(canvas, 'leaflet-zoom-' + (animated ? 'animated' : 'hide'));
 
         this._heat = simpleheat(canvas);
-        if (this._max) {
-            this._heat.max(this._max);
-        }
         this._updateOptions();
     },
 
@@ -104,6 +95,9 @@ L.HeatLayer = L.Class.extend({
 
         if (this.options.gradient) {
             this._heat.gradient(this.options.gradient);
+        }
+        if (this.options.max) {
+            this._heat.max(this.options.max);
         }
     },
 
