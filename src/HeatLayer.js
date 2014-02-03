@@ -6,15 +6,47 @@
 
 L.HeatLayer = L.Class.extend({
 
-    options: {
-        // maxZoom: 18,
-        // radius: 25,
-        // blur: 15
-    },
+    // options: {
+    //     maxZoom: 18,
+    //     radius: 25,
+    //     blur: 15,
+    //     max: 1.0
+    // },
 
     initialize: function (latlngs, options) {
         this._latlngs = latlngs;
         L.setOptions(this, options);
+    },
+
+    setLatLngs: function (latlngs) {
+        this._latlngs = latlngs;
+        return this.redraw();
+    },
+
+    setMax: function (max) {
+        this._max = max;
+        if (this._heat) {
+            this._heat.max(max);
+        }
+        return this.redraw();
+    },
+
+    addLatLng: function (latlng) {
+        this._latlngs.push(latlng);
+        return this.redraw();
+    },
+
+    setOptions: function (options) {
+        L.setOptions(this, options);
+        this._updateOptions();
+        return this.redraw();
+    },
+
+    redraw: function () {
+        if (this._heat && !this._frame) {
+            this._frame = L.Util.requestAnimFrame(this._redraw, this);
+        }
+        return this;
     },
 
     onAdd: function (map) {
@@ -61,7 +93,18 @@ L.HeatLayer = L.Class.extend({
         L.DomUtil.addClass(canvas, 'leaflet-zoom-' + (animated ? 'animated' : 'hide'));
 
         this._heat = simpleheat(canvas);
+        if (this._max) {
+            this._heat.max(this._max);
+        }
+        this._updateOptions();
+    },
+
+    _updateOptions: function () {
         this._heat.radius(this.options.radius || this._heat.defaultRadius, this.options.blur);
+
+        if (this.options.gradient) {
+            this._heat.gradient(this.options.gradient);
+        }
     },
 
     _reset: function () {
@@ -95,7 +138,7 @@ L.HeatLayer = L.Class.extend({
             panePos = this._map._getMapPanePos(),
             offsetX = panePos.x % cellSize,
             offsetY = panePos.y % cellSize,
-            i, len, p, cell, x, y, j, len2;
+            i, len, p, cell, x, y, j, len2, k;
 
         // console.time('process');
         for (i = 0, len = this._latlngs.length; i < len; i++) {
@@ -104,16 +147,18 @@ L.HeatLayer = L.Class.extend({
                 x = Math.floor((p.x - offsetX) / cellSize) + 2;
                 y = Math.floor((p.y - offsetY) / cellSize) + 2;
 
+                k = (this._latlngs[i].alt || 1) * v;
+
                 grid[y] = grid[y] || [];
                 cell = grid[y][x];
 
                 if (!cell) {
-                    grid[y][x] = [p.x, p.y, v];
+                    grid[y][x] = [p.x, p.y, k];
 
                 } else {
-                    cell[0] = (cell[0] * cell[2] + p.x * v) / (cell[2] + v); // x
-                    cell[1] = (cell[1] * cell[2] + p.y * v) / (cell[2] + v); // y
-                    cell[2] += v; // cumulated intensity value
+                    cell[0] = (cell[0] * cell[2] + p.x * k) / (cell[2] + k); // x
+                    cell[1] = (cell[1] * cell[2] + p.y * k) / (cell[2] + k); // y
+                    cell[2] += k; // cumulated intensity value
                 }
             }
         }
@@ -137,6 +182,8 @@ L.HeatLayer = L.Class.extend({
         // console.time('draw ' + data.length);
         this._heat.data(data).draw();
         // console.timeEnd('draw ' + data.length);
+
+        this._frame = null;
     },
 
     _animateZoom: function (e) {
