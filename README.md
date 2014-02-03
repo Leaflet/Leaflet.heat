@@ -40,6 +40,8 @@ Constructs a heatmap layer given an array of `LatLng` points and an object with 
 - **blur** - amount of blur, `15` by default
 - **gradient** - color gradient config, e.g. `{0.4: 'blue', 0.65: 'lime', 1: 'red'}`
 
+Optional third argument in each `LatLng` point (`altitude`) represents point intensity.
+
 ```js
 heat.setOptions(options);
 ```
