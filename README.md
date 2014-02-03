@@ -27,7 +27,7 @@ To include the plugin, just use `leaflet-heat.js` from the `dist` folder:
 
 ## Reference
 
-### L.heatLayer(latlngs, options)
+#### L.heatLayer(latlngs, options)
 
 Constructs a heatmap layer given an array of `LatLng` points and an object with the following options:
 
@@ -40,24 +40,12 @@ Constructs a heatmap layer given an array of `LatLng` points and an object with 
 
 Optional third argument in each `LatLng` point (`altitude`) represents point intensity.
 
-### Methods
+#### Methods
 
-#### setOptions(options)
-
-Sets new heatmap options and redraws it.
-
-#### addLatLng(latlng)
-
-Adds a new point to the heatmap and redraws it.
-
-#### setLatLngs(latlngs)
-
-Resets heatmap data and redraws it.
-
-#### redraw()
-
-Redraws the heatmap.
-
+- **setOptions(options)**: Sets new heatmap options and redraws it.
+- **addLatLng(latlng)**: Adds a new point to the heatmap and redraws it.
+- **setLatLngs(latlngs)**: Resets heatmap data and redraws it.
+- **redraw()**: Redraws the heatmap.
 
 ## Changelog
 
