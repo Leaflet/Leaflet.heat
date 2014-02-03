@@ -15,7 +15,7 @@ additionally clustering points into a grid for performance.
 ## Basic Usage
 
 ```js
-L.heatLayer(latlngs, {radius: 25}).addTo(map);
+var heat = L.heatLayer(latlngs, {radius: 25}).addTo(map);
 ```
 
 To include the plugin, just use `leaflet-heat.js` from the `dist` folder:
@@ -27,9 +27,7 @@ To include the plugin, just use `leaflet-heat.js` from the `dist` folder:
 
 ## Reference
 
-```js
-var heat = L.heatLayer(latlngs, options);
-```
+### L.heatLayer(latlngs, options)
 
 Constructs a heatmap layer given an array of `LatLng` points and an object with the following options:
 
@@ -42,27 +40,21 @@ Constructs a heatmap layer given an array of `LatLng` points and an object with 
 
 Optional third argument in each `LatLng` point (`altitude`) represents point intensity.
 
-```js
-heat.setOptions(options);
-```
+### Methods
+
+#### setOptions(options)
 
 Sets new heatmap options and redraws it.
 
-```js
-heat.addLatLng(latlng);
-```
+#### addLatLng(latlng)
 
 Adds a new point to the heatmap and redraws it.
 
-```js
-heat.setLatLngs(latlngs);
-```
+#### setLatLngs(latlngs)
 
 Resets heatmap data and redraws it.
 
-```js
-heat.redraw();
-```
+#### redraw()
 
 Redraws the heatmap.
 
