@@ -134,14 +134,44 @@ L.HeatLayer = L.Class.extend({
             offsetY = panePos.y % cellSize,
             i, len, p, cell, x, y, j, len2, k;
 
-        // console.time('process');
+        // A locally relative heat map shows the maximum value for maximum local value
+        if (!this.options.byZoom) {
+            var max=false, min=false;
+            for (i = 0, len = this._latlngs.length; i < len; i++) {
+                if (bounds.contains(this._latlngs[i])) {
+                    if (min == false)
+                        min = this._latlngs[i][2];
+                    if (min < this._latlngs[i][2])
+                        min = this._latlngs[i][2];
+                    if (max == false)
+                        max = this._latlngs[i][2];
+                    if (max > this._latlngs[i][2])
+                        max = this._latlngs[i][2];
+                }
+            }
+            var range = max-min, offset = min, plain = false;
+            // unlikely situation
+            if (range == 0) {
+                plain = true;
+            }  
+        }
+        
         for (i = 0, len = this._latlngs.length; i < len; i++) {
             if (bounds.contains(this._latlngs[i])) {
                 p = this._map.latLngToContainerPoint(this._latlngs[i]);
                 x = Math.floor((p.x - offsetX) / cellSize) + 2;
                 y = Math.floor((p.y - offsetY) / cellSize) + 2;
-
-                k = (this._latlngs[i].alt || 1) * v;
+                
+                if (this.options.byZoom) {
+                    // show heat map according to v, which depends on zoom.
+                    k = (this._latlngs[i].alt || 1) * v;
+                } else {
+                    // show either a plain heat map (all the values are the same) or a relative heatmap according to minimum and maximum values
+                    if (plain)
+                        k = 0.5;
+                    else
+                        k = (this._latlngs[i][2]-offset)/range;
+                }
 
                 grid[y] = grid[y] || [];
                 cell = grid[y][x];
