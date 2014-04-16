@@ -99,6 +99,9 @@ L.HeatLayer = L.Class.extend({
         if (this.options.max) {
             this._heat.max(this.options.max);
         }
+        if (this.options.opacity) {
+            this._heat.opacity(this.options.opacity);
+        }
     },
 
     _reset: function () {
