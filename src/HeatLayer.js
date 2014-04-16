@@ -135,6 +135,7 @@ L.HeatLayer = L.Class.extend({
             i, len, p, cell, x, y, j, len2, k;
 
         // A locally relative heat map shows the maximum value for maximum local value
+        // By default it is a relative heatmap unless byZoom is set to true in the options
         if (!this.options.byZoom) {
             var max=false, min=false;
             for (i = 0, len = this._latlngs.length; i < len; i++) {
