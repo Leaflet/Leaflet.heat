@@ -149,11 +149,11 @@ L.HeatLayer = L.Class.extend({
 
                     if (min == false)
                         min = value;
-                    if (min < value)
+                    if (min > value)
                         min = value;
                     if (max == false)
                         max = value;
-                    if (max > value)
+                    if (max < value)
                         max = value;
                 }
             }
