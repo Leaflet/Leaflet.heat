@@ -138,19 +138,23 @@ L.HeatLayer = L.Class.extend({
             i, len, p, cell, x, y, j, len2, k;
 
         // A locally relative heat map shows the maximum value for maximum local value
-        // By default it is a relative heatmap unless byZoom is set to true in the options
         if (!this.options.byZoom) {
-            var max=false, min=false;
+            var max=false, min=false, value;
             for (i = 0, len = this._latlngs.length; i < len; i++) {
                 if (bounds.contains(this._latlngs[i])) {
+                    if (this._latlngs[i].alt)
+                        value = this._latlngs[i].alt;
+                    else 
+                        value = this._latlngs[i][2];
+
                     if (min == false)
-                        min = this._latlngs[i][2];
-                    if (min < this._latlngs[i][2])
-                        min = this._latlngs[i][2];
+                        min = value;
+                    if (min < value)
+                        min = value;
                     if (max == false)
-                        max = this._latlngs[i][2];
-                    if (max > this._latlngs[i][2])
-                        max = this._latlngs[i][2];
+                        max = value;
+                    if (max > value)
+                        max = value;
                 }
             }
             var range = max-min, offset = min, plain = false;
@@ -173,10 +177,13 @@ L.HeatLayer = L.Class.extend({
                     // show either a plain heat map (all the values are the same) or a relative heatmap according to minimum and maximum values
                     if (plain)
                         k = 0.5;
-                    else
-                        k = (this._latlngs[i][2]-offset)/range;
+                    else {
+                        if (this._latlngs[i].alt)
+                            k = ( (this._latlngs[i].alt) -offset)/range;
+                        else 
+                            k = ( (this._latlngs[i][2]) -offset)/range;
+                    }
                 }
-
                 grid[y] = grid[y] || [];
                 cell = grid[y][x];
 
