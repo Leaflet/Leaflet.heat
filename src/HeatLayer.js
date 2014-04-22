@@ -37,7 +37,7 @@ L.HeatLayer = L.Class.extend({
     },
 
     redraw: function () {
-        if (this._heat && !this._frame) {
+        if (this._heat && !this._frame && !this._map._animating) {
             this._frame = L.Util.requestAnimFrame(this._redraw, this);
         }
         return this;
@@ -77,7 +77,7 @@ L.HeatLayer = L.Class.extend({
     },
 
     _initCanvas: function () {
-        var canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer');
+        var canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer leaflet-layer');
 
         var size = this._map.getSize();
         canvas.width  = size.x;
