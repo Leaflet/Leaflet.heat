@@ -49,6 +49,15 @@ Optional third argument in each `LatLng` point (`altitude`) represents point int
 
 ## Changelog
 
+#### 0.1.2 &mdash; Nov 5, 2014
+
+- Added compatibility with Leaflet 0.8-dev.
+
+#### 0.1.1 &mdash; Apr 22, 2014
+
+- Fixed overlaying two heatmaps on top of each other.
+- Fixed rare animation issues.
+
 #### 0.1.0 &mdash; Feb 3, 2014
 
 - Added `addLatLng`, `setLatlngs`, `setOptions` and `redraw` methods.
