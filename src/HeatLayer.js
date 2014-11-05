@@ -4,7 +4,7 @@
  https://github.com/Leaflet/Leaflet.heat
 */
 
-L.HeatLayer = L.Class.extend({
+L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 
     // options: {
     //     maxZoom: 18,
@@ -184,8 +184,12 @@ L.HeatLayer = L.Class.extend({
         var scale = this._map.getZoomScale(e.zoom),
             offset = this._map._getCenterOffset(e.center)._multiplyBy(-scale).subtract(this._map._getMapPanePos());
 
-        this._canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString(offset) + ' scale(' + scale + ')';
-        // L.DomUtil.setTransform(this._canvas, offset, scale);
+        if (L.DomUtil.setTransform) {
+           L.DomUtil.setTransform(this._canvas, offset, scale);
+
+        } else {
+            this._canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString(offset) + ' scale(' + scale + ')';
+        }
     }
 });
 
