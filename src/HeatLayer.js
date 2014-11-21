@@ -7,6 +7,7 @@
 L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 
     // options: {
+    //     minOpacity: 0.05,
     //     maxZoom: 18,
     //     radius: 25,
     //     blur: 15,
@@ -174,7 +175,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
         // console.timeEnd('process');
 
         // console.time('draw ' + data.length);
-        this._heat.data(data).draw();
+        this._heat.data(data).draw(this.options.minOpacity);
         // console.timeEnd('draw ' + data.length);
 
         this._frame = null;
