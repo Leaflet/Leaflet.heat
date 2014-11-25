@@ -142,7 +142,9 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
                 x = Math.floor((p.x - offsetX) / cellSize) + 2;
                 y = Math.floor((p.y - offsetY) / cellSize) + 2;
 
-                var alt = isNaN(this._latlngs[i].alt) ? (isNaN(this._latlngs[i][2]) ? 1 : this._latlngs[i][2]) : this._latlngs[i].alt
+                var alt =
+                    this._latlngs[i].alt !== undefined ? this._latlngs[i].alt :
+                    this._latlngs[i][2] !== undefined ? +this._latlngs[i][2] : 1;
                 k = alt * v;
 
                 grid[y] = grid[y] || [];
