@@ -51,7 +51,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
             this._initCanvas();
         }
 
-        map._panes.overlayPane.appendChild(this._canvas);
+        map._panes.overlayPane.appendChild(this._div);
 
         map.on('moveend', this._reset, this);
 
@@ -63,7 +63,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
     },
 
     onRemove: function (map) {
-        map.getPanes().overlayPane.removeChild(this._canvas);
+        map.getPanes().overlayPane.removeChild(this._div);
 
         map.off('moveend', this._reset, this);
 
@@ -78,7 +78,9 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
     },
 
     _initCanvas: function () {
+        this._div = L.DomUtil.create('div', 'leaflet-layer');
         var canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer leaflet-layer');
+        this._div.appendChild(canvas);
 
         var size = this._map.getSize();
         canvas.width  = size.x;
