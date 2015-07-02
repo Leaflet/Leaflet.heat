@@ -126,6 +126,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
                 this._map.containerPointToLatLng(L.point([-r, -r])),
                 this._map.containerPointToLatLng(size.add([r, r]))),
 
+            max = this.options.max === undefined ? 1 : this.options.max,
             maxZoom = this.options.maxZoom === undefined ? this._map.getMaxZoom() : this.options.maxZoom,
             v = 1 / Math.pow(2, Math.max(0, Math.min(maxZoom - this._map.getZoom(), 12))),
             cellSize = r / 2,
@@ -169,7 +170,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
                         data.push([
                             Math.round(cell[0]),
                             Math.round(cell[1]),
-                            Math.min(cell[2], this.options.max)
+                            Math.min(cell[2], max)
                         ]);
                     }
                 }
