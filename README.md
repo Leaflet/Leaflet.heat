@@ -66,6 +66,7 @@ Unless `max` option is specified, intensity should range between `0.0` and `1.0`
 
 - Fixed intensity to work properly with `max` option.
 - Fixed zoom animation on Leaflet 1.0 beta 2.
+- Fixed tiles and point intensity in demos.
 
 #### 0.1.3 &mdash; Nov 25, 2015
 
