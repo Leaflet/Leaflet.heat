@@ -1,8 +1,4 @@
-/*
- (c) 2014, Vladimir Agafonkin
- Leaflet.heat, a tiny and fast heatmap plugin for Leaflet.
- https://github.com/Leaflet/Leaflet.heat
-*/
+'use strict';
 
 L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 
@@ -193,7 +189,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
             offset = this._map._getCenterOffset(e.center)._multiplyBy(-scale).subtract(this._map._getMapPanePos());
 
         if (L.DomUtil.setTransform) {
-           L.DomUtil.setTransform(this._canvas, offset, scale);
+            L.DomUtil.setTransform(this._canvas, offset, scale);
 
         } else {
             this._canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString(offset) + ' scale(' + scale + ')';

@@ -18,13 +18,23 @@
   },
   "main": "dist/leaflet-heat.js",
   "devDependencies": {
+    "eslint": "^1.7.3",
+    "eslint-config-mourner": "^1.0.1",
     "simpleheat": "~0.2.0",
-    "uglify-js": "~2.4.15"
+    "uglify-js": "^2.5.0"
+  },
+  "eslintConfig": {
+    "extends": "mourner",
+    "globals": {
+      "L": false,
+      "simpleheat": false
+    }
   },
   "scripts": {
-    "test": "jshint src",
-    "prepublish": "uglifyjs node_modules/simpleheat/simpleheat.js src/HeatLayer.js -c -m --comments /Vladimir/ -o dist/leaflet-heat.js"
+    "test": "eslint src",
+    "prepublish": "uglifyjs node_modules/simpleheat/simpleheat.js src/HeatLayer.js -c -m -o dist/leaflet-heat.js"
   },
+  "license": "BSD-2-Clause",
   "jshintConfig": {
     "quotmark": "single",
     "globals": {
