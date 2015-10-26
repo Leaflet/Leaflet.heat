@@ -62,6 +62,16 @@ Unless `max` option is specified, intensity should range between `0.0` and `1.0`
 
 ## Changelog
 
+### 0.2.0 &mdash; Oct 26, 2015
+
+- Fixed intensity to work properly with `max` option.
+- Fixed zoom animation on Leaflet 1.0 beta 2.
+
+#### 0.1.3 &mdash; Nov 25, 2015
+
+- Fixed some edge cases when handling point intensity.
+- Added `minOpacity` option.
+
 #### 0.1.2 &mdash; Nov 5, 2014
 
 - Added compatibility with Leaflet 0.8-dev.
