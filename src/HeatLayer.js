@@ -80,6 +80,9 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
     _initCanvas: function () {
         var canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer leaflet-layer');
 
+        var originProp = L.DomUtil.testProp(['transformOrigin', 'WebkitTransformOrigin', 'msTransformOrigin']);
+        canvas.style[originProp] = '50% 50%';
+
         var size = this._map.getSize();
         canvas.width  = size.x;
         canvas.height = size.y;
