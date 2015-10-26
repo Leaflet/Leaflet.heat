@@ -1,6 +1,6 @@
 {
   "name": "leaflet.heat",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "A tiny and fast Leaflet heatmap plugin.",
   "homepage": "https://github.com/Leaflet/Leaflet.heat",
   "keywords": [
@@ -39,7 +39,6 @@
     "nonbsp": true,
     "undef": true,
     "unused": true,
-    "browser": true,
-    "trailing": true
+    "browser": true
   }
 }
