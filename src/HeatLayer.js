@@ -125,9 +125,9 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
         var data = [],
             r = this._heat._r,
             size = this._map.getSize(),
-            bounds = new L.LatLngBounds(
-                this._map.containerPointToLatLng(L.point([-r, -r])),
-                this._map.containerPointToLatLng(size.add([r, r]))),
+            bounds = new L.Bounds(
+                L.point([-r, -r]),
+                size.add([r, r])),
 
             max = this.options.max === undefined ? 1 : this.options.max,
             maxZoom = this.options.maxZoom === undefined ? this._map.getMaxZoom() : this.options.maxZoom,
@@ -141,8 +141,8 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 
         // console.time('process');
         for (i = 0, len = this._latlngs.length; i < len; i++) {
-            if (bounds.contains(this._latlngs[i])) {
-                p = this._map.latLngToContainerPoint(this._latlngs[i]);
+            p = this._map.latLngToContainerPoint(this._latlngs[i]);
+            if (bounds.contains(p)) {
                 x = Math.floor((p.x - offsetX) / cellSize) + 2;
                 y = Math.floor((p.y - offsetY) / cellSize) + 2;
 
