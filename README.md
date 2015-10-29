@@ -57,6 +57,7 @@ Unless `max` option is specified, intensity should range between `0.0` and `1.0`
 
 - **setOptions(options)**: Sets new heatmap options and redraws it.
 - **addLatLng(latlng)**: Adds a new point to the heatmap and redraws it.
+- **removeLatLng(latlng)**: Removes an existing point from the heatmap and redraws it.
 - **setLatLngs(latlngs)**: Resets heatmap data and redraws it.
 - **redraw()**: Redraws the heatmap.
 
