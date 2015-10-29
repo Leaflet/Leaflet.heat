@@ -22,6 +22,8 @@ var heat = L.heatLayer([
 ], {radius: 25}).addTo(map);
 ```
 
+* Worth noting that you need to set a height on .leaflet-heatmap-layer in order for the heatmap to display properly *
+
 To include the plugin, just use `leaflet-heat.js` from the `dist` folder:
 
 ```html
