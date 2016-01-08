@@ -7,7 +7,8 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
     //     maxZoom: 18,
     //     radius: 25,
     //     blur: 15,
-    //     max: 1.0
+    //     max: 1.0,
+    //     cellSize: radius / 2
     // },
 
     initialize: function (latlngs, options) {
@@ -128,7 +129,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
             max = this.options.max === undefined ? 1 : this.options.max,
             maxZoom = this.options.maxZoom === undefined ? this._map.getMaxZoom() : this.options.maxZoom,
             v = 1 / Math.pow(2, Math.max(0, Math.min(maxZoom - this._map.getZoom(), 12))),
-            cellSize = r / 2,
+            cellSize = this.options.cellSize === undefined ? r / 2 : this.options.cellSize,
             grid = [],
             panePos = this._map._getMapPanePos(),
             offsetX = panePos.x % cellSize,
