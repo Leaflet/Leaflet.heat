@@ -1,0 +1,26 @@
+{
+  "name": "leaflet.heat",
+  "description": "A tiny and fast Leaflet heatmap plugin.",
+  "main": "dist/leaflet-heat.js",
+  "authors": [
+    "Vladimir Agafonkin"
+  ],
+  "license": "BSD-2-Clause",
+  "keywords": [
+    "heatmap",
+    "canvas",
+    "visualization",
+    "gis",
+    "leaflet",
+    "plugin"
+  ],
+  "homepage": "https://github.com/Leaflet/Leaflet.heat",
+  "moduleType": [],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
