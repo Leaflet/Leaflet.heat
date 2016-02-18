@@ -16,6 +16,9 @@
   ],
   "homepage": "https://github.com/Leaflet/Leaflet.heat",
   "moduleType": [],
+  "dependencies": {
+    "leaflet": ">=0.6"
+  },
   "ignore": [
     "**/.*",
     "node_modules",
