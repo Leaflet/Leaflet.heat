@@ -118,6 +118,9 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
     },
 
     _redraw: function () {
+        if (!this._map) {
+            return;
+        }
         var data = [],
             r = this._heat._r,
             size = this._map.getSize(),
