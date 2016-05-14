@@ -130,7 +130,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 
             max = this.options.max === undefined ? 1 : this.options.max,
             maxZoom = this.options.maxZoom === undefined ? this._map.getMaxZoom() : this.options.maxZoom,
-            v = 1 / Math.pow(2, Math.max(0, Math.min(maxZoom - this._map.getZoom(), 12))),
+            v = 1 / Math.pow(4, Math.max(0, Math.min(maxZoom - this._map.getZoom(), 12))),
             cellSize = r / 2,
             grid = [],
             panePos = this._map._getMapPanePos(),
