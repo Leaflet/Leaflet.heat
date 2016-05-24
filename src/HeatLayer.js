@@ -47,7 +47,11 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
             this._initCanvas();
         }
 
-        map._panes.overlayPane.appendChild(this._canvas);
+        if (this.options.pane) {
+            this.getPane().appendChild(this._canvas);
+        }else{
+            map._panes.overlayPane.appendChild(this._canvas);
+        }
 
         map.on('moveend', this._reset, this);
 
@@ -59,7 +63,11 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
     },
 
     onRemove: function (map) {
-        map.getPanes().overlayPane.removeChild(this._canvas);
+        if (this.options.pane) {
+            this.getPane().removeChild(this._canvas);
+        }else{
+            map.getPanes().overlayPane.removeChild(this._canvas);
+        }
 
         map.off('moveend', this._reset, this);
 
