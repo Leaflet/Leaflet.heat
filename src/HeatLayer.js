@@ -34,7 +34,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
     },
 
     redraw: function () {
-        if (this._heat && !this._frame && !this._map._animating) {
+        if (this._heat && !this._frame && this._map && !this._map._animating) {
             this._frame = L.Util.requestAnimFrame(this._redraw, this);
         }
         return this;
