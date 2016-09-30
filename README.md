@@ -45,6 +45,8 @@ Constructs a heatmap layer given an array of points and an object with the follo
 - **radius** - radius of each "point" of the heatmap, `25` by default
 - **blur** - amount of blur, `15` by default
 - **gradient** - color gradient config, e.g. `{0.4: 'blue', 0.65: 'lime', 1: 'red'}`
+- **cellSize** - the cell size in the grid. Points which are closer than this may be merged. Defaults to `radius / 2`.
+  Set to `1` to do almost no merging.
 
 Each point in the input array can be either an array like `[50.5, 30.5, 0.5]`,
 or a [Leaflet LatLng object](http://leafletjs.com/reference.html#latlng).
