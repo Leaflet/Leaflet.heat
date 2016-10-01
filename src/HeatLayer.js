@@ -148,14 +148,29 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 
         // console.time('process');
         for (i = 0, len = this._latlngs.length; i < len; i++) {
-            p = this._map.latLngToContainerPoint(this._latlngs[i]);
+
+
+            var point = this._latlngs[i];
+
+            // use options to get lat and lng fields
+            if (this.options.latField !== undefined && this.options.lngField !== undefined) {
+                if (this.options.valueField !== undefined) {
+                   point = new L.LatLng(point[this.options.latField], point[this.options.lngField], point[this.options.valueField]);
+                }
+                else {
+                    point = new L.LatLng(point[this.options.latField], point[this.options.lngField]);
+                }
+            }
+
+
+            p = this._map.latLngToContainerPoint(point);
             if (bounds.contains(p)) {
                 x = Math.floor((p.x - offsetX) / cellSize) + 2;
                 y = Math.floor((p.y - offsetY) / cellSize) + 2;
 
                 var alt =
-                    this._latlngs[i].alt !== undefined ? this._latlngs[i].alt :
-                    this._latlngs[i][2] !== undefined ? +this._latlngs[i][2] : 1;
+                    point.alt !== undefined ? point.alt :
+                    point[2] !== undefined ? +tpoint[2] : 1;
                 k = alt * v;
 
                 grid[y] = grid[y] || [];
