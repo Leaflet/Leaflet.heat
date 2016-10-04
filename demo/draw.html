@@ -37,7 +37,7 @@ var tiles = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 
 addressPoints = addressPoints.map(function (p) { return [p[0], p[1]]; });
 
-var heat = L.heatLayer(addressPoints).addTo(map),
+var heat = L.heatLayer(addressPoints, {relative: true}).addTo(map),
     draw = true;
 
 map.on({
