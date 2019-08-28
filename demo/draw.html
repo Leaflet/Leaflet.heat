@@ -1,55 +1,48 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <title>Leaflet.heat demo</title>
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
-    <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
-    <style>
-        #map { width: 800px; height: 600px; }
-        body { font: 16px/1.4 "Helvetica Neue", Arial, sans-serif; }
-        .ghbtns { position: relative; top: 4px; margin-left: 5px; }
-        a { color: #0077ff; }
-    </style>
-</head>
-<body>
+<html lang="en">
+	<head>
+		<title>Leaflet.heat demo</title>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
+		<script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js" integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og==" crossorigin=""></script>
+		<style>
+			#map { width: 800px; height: 600px; }
+			body { font: 16px/1.4 "Helvetica Neue", Arial, sans-serif; }
+			.ghbtns { position: relative; top: 4px; margin-left: 5px; }
+			a { color: #0077ff; }
+		</style>
+	</head>
+	<body>
+		<p>
+			A dynamic demo of <a href="https://github.com/Leaflet/Leaflet.heat">Leaflet.heat</a>, a tiny and fast Leaflet heatmap plugin.
+			<a class="github-button" href="https://github.com/Leaflet/Leaflet.heat" data-icon="octicon-star" aria-label="Star Leaflet/Leaflet.heat on GitHub">Star</a>
+		</p>
 
-<p>
-    A dynamic demo of <a href="https://github.com/Leaflet/Leaflet.heat">Leaflet.heat</a>, a tiny and fast Leaflet heatmap plugin.
-    <iframe class="ghbtns" src="http://ghbtns.com/github-btn.html?user=Leaflet&amp;repo=Leaflet.heat&amp;type=watch&amp;count=true"
-  allowtransparency="true" frameborder="0" scrolling="0" width="90" height="20"></iframe>
-</p>
+		<div id="map"></div>
 
-<div id="map"></div>
+		<script src="../dist/leaflet-heat.js"></script>
 
-<!-- <script src="../node_modules/simpleheat/simpleheat.js"></script>
-<script src="../src/HeatLayer.js"></script>
- -->
-<script src="../dist/leaflet-heat.js"></script>
+		<script src="https://leaflet.github.io/Leaflet.markercluster/example/realworld.388.js"></script>
+		<script>
+			var map = L.map('map').setView([-37.82109, 175.2193], 16);
 
-<script src="http://leaflet.github.io/Leaflet.markercluster/example/realworld.388.js"></script>
-<script>
+			var tiles = L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+				attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
+			}).addTo(map);
 
-var map = L.map('map').setView([-37.82109, 175.2193], 16);
+			addressPoints = addressPoints.map(function (p) { return [p[0], p[1]]; });
 
-var tiles = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-}).addTo(map);
+			var heat = L.heatLayer(addressPoints).addTo(map), draw = true;
 
-addressPoints = addressPoints.map(function (p) { return [p[0], p[1]]; });
-
-var heat = L.heatLayer(addressPoints).addTo(map),
-    draw = true;
-
-map.on({
-    movestart: function () { draw = false; },
-    moveend:   function () { draw = true; },
-    mousemove: function (e) {
-        if (draw) {
-            heat.addLatLng(e.latlng);
-        }
-    }
-})
-
-</script>
-</body>
+			map.on({
+				movestart: function () { draw = false; },
+				moveend:   function () { draw = true; },
+				mousemove: function (e) {
+					if (draw) {
+						heat.addLatLng(e.latlng);
+					}
+				}
+			})
+		</script>
+		<script async defer src="https://buttons.github.io/buttons.js"></script>
+	</body>
 </html>
