@@ -18,7 +18,7 @@
   },
   "main": "dist/leaflet-heat.js",
   "devDependencies": {
-    "eslint": "^1.7.3",
+    "eslint": "^6.6.0",
     "eslint-config-mourner": "^1.0.1",
     "simpleheat": "~0.2.0",
     "uglify-js": "^2.5.0"
