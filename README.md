@@ -39,8 +39,10 @@ To build the dist files run:
 
 Constructs a heatmap layer given an array of points and an object with the following options:
 - **minOpacity** - the minimum opacity the heat will start at
-- **maxZoom** - zoom level where the points reach maximum intensity (as intensity scales with zoom),
+- **maxIntensityZoom** - zoom level where the points reach maximum intensity (as intensity scales with zoom),
   equals `maxZoom` of the map by default
+- **maxZoom** - maximum zoom level to draw
+- **minZoom** - minimum zoom level to draw
 - **max** - maximum point intensity, `1.0` by default
 - **radius** - radius of each "point" of the heatmap, `25` by default
 - **blur** - amount of blur, `15` by default

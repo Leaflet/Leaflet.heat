@@ -4,7 +4,9 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 
     // options: {
     //     minOpacity: 0.05,
-    //     maxZoom: 18,
+    //     maxIntensityZoom: 18,
+    //     maxZoom: 32,
+    //     minZoom: 8,
     //     radius: 25,
     //     blur: 15,
     //     max: 1.0
@@ -49,7 +51,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 
         if (this.options.pane) {
             this.getPane().appendChild(this._canvas);
-        }else{
+        } else {
             map._panes.overlayPane.appendChild(this._canvas);
         }
 
@@ -65,7 +67,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
     onRemove: function (map) {
         if (this.options.pane) {
             this.getPane().removeChild(this._canvas);
-        }else{
+        } else {
             map.getPanes().overlayPane.removeChild(this._canvas);
         }
 
@@ -129,6 +131,13 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
         if (!this._map) {
             return;
         }
+        var maxZoom = this.options.maxZoom === undefined ? this._map.getMaxZoom() : this.options.maxZoom;
+        var minZoom = this.options.minZoom === undefined ? this._map.getMinZoom() : this.options.minZoom;
+        var currentZoom = this._map.getZoom();
+        if (currentZoom > maxZoom || currentZoom < minZoom) {
+            this._heat.clear();
+            return;
+        }
         var data = [],
             r = this._heat._r,
             size = this._map.getSize(),
@@ -137,8 +146,8 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
                 size.add([r, r])),
 
             max = this.options.max === undefined ? 1 : this.options.max,
-            maxZoom = this.options.maxZoom === undefined ? this._map.getMaxZoom() : this.options.maxZoom,
-            v = 1 / Math.pow(2, Math.max(0, Math.min(maxZoom - this._map.getZoom(), 12))),
+            maxIntensityZoom = this.options.maxIntensityZoom === undefined ? this._map.getMaxZoom() : this.options.maxIntensityZoom,
+            v = 1 / Math.pow(2, Math.max(0, Math.min(maxIntensityZoom - this._map.getZoom(), 12))),
             cellSize = r / 2,
             grid = [],
             panePos = this._map._getMapPanePos(),
