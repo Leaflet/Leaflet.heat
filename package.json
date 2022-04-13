@@ -1,6 +1,6 @@
 {
   "name": "leaflet.heat",
-  "version": "0.3.0",
+  "version": "0.4.1",
   "description": "A tiny and fast Leaflet heatmap plugin.",
   "homepage": "https://github.com/Leaflet/Leaflet.heat",
   "keywords": [
@@ -20,7 +20,7 @@
   "devDependencies": {
     "eslint": "^1.7.3",
     "eslint-config-mourner": "^1.0.1",
-    "simpleheat": "~0.4.0",
+    "simpleheat": ">=0.4.1",
     "uglify-js": "^2.5.0"
   },
   "eslintConfig": {
