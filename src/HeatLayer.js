@@ -138,16 +138,14 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 
             max = this.options.max === undefined ? 1 : this.options.max,
             maxZoom = this.options.maxZoom === undefined ? this._map.getMaxZoom() : this.options.maxZoom,
-            v = 1 / Math.pow(2, Math.max(0, Math.min(maxZoom - this._map.getZoom(), 12))),
+            v = 1 / 4,
             cellSize = r / 2,
             grid = [],
             panePos = this._map._getMapPanePos(),
             offsetX = panePos.x % cellSize,
             offsetY = panePos.y % cellSize,
             i, len, p, cell, x, y, j, len2, k;
-        console.log('local leaflet.heat')
-        console.log('r', r)
-        console.log('v', v)
+
         // console.time('process');
         for (i = 0, len = this._latlngs.length; i < len; i++) {
             p = this._map.latLngToContainerPoint(this._latlngs[i]);
