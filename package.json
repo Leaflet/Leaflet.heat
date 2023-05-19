@@ -50,5 +50,8 @@
     "undef": true,
     "unused": true,
     "browser": true
+  },
+  "dependencies": {
+    "uglify": "^0.1.5"
   }
 }

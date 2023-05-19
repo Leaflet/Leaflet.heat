@@ -145,7 +145,9 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
             offsetX = panePos.x % cellSize,
             offsetY = panePos.y % cellSize,
             i, len, p, cell, x, y, j, len2, k;
-
+        console.log('local leaflet.heat')
+        console.log('r', r)
+        console.log('v', v)
         // console.time('process');
         for (i = 0, len = this._latlngs.length; i < len; i++) {
             p = this._map.latLngToContainerPoint(this._latlngs[i]);
