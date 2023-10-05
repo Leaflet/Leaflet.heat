@@ -32,7 +32,11 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
         }
         return this.redraw();
     },
-
+    
+    getBounds: function () {
+        return L.latLngBounds(this._latlngs);  
+    },
+    
     redraw: function () {
         if (this._heat && !this._frame && this._map && !this._map._animating) {
             this._frame = L.Util.requestAnimFrame(this._redraw, this);
