@@ -99,6 +99,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
         L.DomUtil.addClass(canvas, 'leaflet-zoom-' + (animated ? 'animated' : 'hide'));
 
         this._heat = simpleheat(canvas);
+	this._heat.fixedOpacity(100);
         this._updateOptions();
     },
 
@@ -160,7 +161,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
                 var alt =
                     this._latlngs[i].alt !== undefined ? this._latlngs[i].alt :
                     this._latlngs[i][2] !== undefined ? +this._latlngs[i][2] : 1;
-                k = alt * v;
+                k = alt; 
 
                 grid[y] = grid[y] || [];
                 cell = grid[y][x];
