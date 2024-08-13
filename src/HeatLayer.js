@@ -142,7 +142,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 
             max = this.options.max === undefined ? 1 : this.options.max,
             maxZoom = this.options.maxZoom === undefined ? this._map.getMaxZoom() : this.options.maxZoom,
-            v = 1 / Math.pow(2, Math.max(0, Math.min(maxZoom - this._map.getZoom(), 12))),
+            v = 1 / Math.pow(4, Math.max(0, Math.min(maxZoom - this._map.getZoom(), 12))),
             cellSize = r / 2,
             grid = [],
             panePos = this._map._getMapPanePos(),
@@ -151,6 +151,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
             i, len, p, cell, x, y, j, len2, k;
 
         // console.time('process');
+        var localMax = false, localValue;
         for (i = 0, len = this._latlngs.length; i < len; i++) {
             p = this._map.latLngToContainerPoint(this._latlngs[i]);
             if (bounds.contains(p)) {
@@ -166,12 +167,22 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
                 cell = grid[y][x];
 
                 if (!cell) {
+                    localValue = k;
                     grid[y][x] = [p.x, p.y, k];
 
                 } else {
                     cell[0] = (cell[0] * cell[2] + p.x * k) / (cell[2] + k); // x
                     cell[1] = (cell[1] * cell[2] + p.y * k) / (cell[2] + k); // y
                     cell[2] += k; // cumulated intensity value
+                    localValue = cell[2];
+                }
+                if (this.options.relative) {
+                    if (localMax === false) {
+                        localMax = localValue;
+                    }
+                    else if (localMax < localValue) {
+                        localMax = localValue;
+                    }
                 }
             }
         }
@@ -193,6 +204,9 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
         // console.timeEnd('process');
 
         // console.time('draw ' + data.length);
+        if (this.options.relative && localMax !== false) {
+            this._heat.max(localMax);
+        }
         this._heat.data(data).draw(this.options.minOpacity);
         // console.timeEnd('draw ' + data.length);
 
