@@ -142,7 +142,7 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
 
             max = this.options.max === undefined ? 1 : this.options.max,
             maxZoom = this.options.maxZoom === undefined ? this._map.getMaxZoom() : this.options.maxZoom,
-            v = 1 / Math.pow(2, Math.max(0, Math.min(maxZoom - this._map.getZoom(), 12))),
+            v = 1, // vestigial
             cellSize = r / 2,
             grid = [],
             panePos = this._map._getMapPanePos(),
@@ -171,7 +171,8 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
                 } else {
                     cell[0] = (cell[0] * cell[2] + p.x * k) / (cell[2] + k); // x
                     cell[1] = (cell[1] * cell[2] + p.y * k) / (cell[2] + k); // y
-                    cell[2] += k; // cumulated intensity value
+                    // Join multiple cell values using alpha blending
+                    cell[2] = (cell[2] * (1 - k/max)) + k;
                 }
             }
         }
