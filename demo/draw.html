@@ -1,57 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Leaflet.heat demo</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
-    integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
-   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
-    integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
-    <style>
-        #map { width: 800px; height: 600px; }
-        body { font: 16px/1.4 "Helvetica Neue", Arial, sans-serif; }
-        .ghbtns { position: relative; top: 4px; margin-left: 5px; }
-        a { color: #0077ff; }
-    </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Leaflet.heat drawing demo</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@2.0.0-beta.1/dist/leaflet.css">
+    <script type="importmap">
+        {"imports": {
+            "leaflet": "https://cdn.jsdelivr.net/npm/leaflet@2.0.0-beta.1/dist/leaflet.js",
+            "simpleheat": "https://cdn.jsdelivr.net/npm/simpleheat@1.0.0/simpleheat.js"
+        }}
+    </script>
+    <link rel="stylesheet" href="demo.css">
 </head>
 <body>
 
 <p>
-    A dynamic demo of <a href="https://github.com/Leaflet/Leaflet.heat">Leaflet.heat</a>, a tiny and fast Leaflet heatmap plugin.
-    <iframe class="ghbtns" src="https://ghbtns.com/github-btn.html?user=Leaflet&amp;repo=Leaflet.heat&amp;type=watch&amp;count=true"
-  allowtransparency="true" frameborder="0" scrolling="0" width="90" height="20"></iframe>
+    A dynamic demo of <a href="https://github.com/Leaflet/Leaflet.heat">Leaflet.heat</a>, a tiny and fast Leaflet
+    heatmap plugin. Move the pointer over the map to draw. <a href="index.html">Back to the main demo</a>.
 </p>
 
 <div id="map"></div>
 
-<!-- <script src="../node_modules/simpleheat/simpleheat.js"></script>
-<script src="../src/HeatLayer.js"></script>
- -->
-<script src="../dist/leaflet-heat.js"></script>
+<script type="module">
+    import {LeafletMap, TileLayer} from 'leaflet';
+    import {HeatLayer} from '../src/HeatLayer.js';
 
-<script src="https://leaflet.github.io/Leaflet.markercluster/example/realworld.388.js"></script>
-<script>
+    const map = new LeafletMap('map').setView([-37.82109, 175.2193], 16);
 
-var map = L.map('map').setView([-37.82109, 175.2193], 16);
+    new TileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
 
-var tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
-}).addTo(map);
+    const points = await (await fetch('points-388.json')).json();
+    const heat = new HeatLayer(points).addTo(map);
+    let draw = true;
 
-addressPoints = addressPoints.map(function (p) { return [p[0], p[1]]; });
-
-var heat = L.heatLayer(addressPoints).addTo(map),
-    draw = true;
-
-map.on({
-    movestart: function () { draw = false; },
-    moveend:   function () { draw = true; },
-    mousemove: function (e) {
-        if (draw) {
-            heat.addLatLng(e.latlng);
+    map.on({
+        movestart() { draw = false; },
+        moveend() { draw = true; },
+        pointermove(e) {
+            if (draw) heat.addLatLng(e.latlng);
         }
-    }
-})
-
+    });
 </script>
 </body>
 </html>

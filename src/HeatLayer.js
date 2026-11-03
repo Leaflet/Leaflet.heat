@@ -2,15 +2,6 @@ import * as L from 'leaflet';
 import SimpleHeat from 'simpleheat';
 
 export class HeatLayer extends L.Layer {
-
-    // options: {
-    //     minOpacity: 0.05,
-    //     maxZoom: 18,
-    //     radius: 25,
-    //     blur: 15,
-    //     max: 1.0
-    // },
-
     constructor(latlngs, options) {
         super();
         this._latlngs = latlngs;
@@ -82,7 +73,7 @@ export class HeatLayer extends L.Layer {
 
     _updateOptions() {
         this._heat.radius(this.options.radius, this.options.blur);
-        this._heat.max(this.options.max ?? 1);
+        this._heat.max(this.options.max);
 
         if (this.options.gradient) {
             this._heat.gradient(this.options.gradient);
@@ -160,3 +151,15 @@ export class HeatLayer extends L.Layer {
         L.DomUtil.setTransform(this._canvas, offset, scale);
     }
 }
+
+// 1.x keeps defaults on the prototype, and without a copy of its own, mergeOptions would change every L.Layer
+if (L.version.startsWith('1.')) {
+    HeatLayer.prototype.options = Object.create(L.Layer.prototype.options);
+}
+HeatLayer.mergeOptions({
+    radius: 25,
+    blur: 15,
+    minOpacity: 0.05,
+    max: 1
+    // maxZoom falls back to the map's
+});
