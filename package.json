@@ -17,7 +17,13 @@
     "url": "git://github.com/Leaflet/Leaflet.heat.git"
   },
   "type": "module",
-  "exports": "./src/HeatLayer.js",
+  "exports": {
+    ".": {
+      "types": "./dist/types/HeatLayer.d.ts",
+      "default": "./src/HeatLayer.js"
+    }
+  },
+  "types": "./dist/types/HeatLayer.d.ts",
   "files": [
     "src",
     "dist"
@@ -31,8 +37,9 @@
   },
   "scripts": {
     "lint": "eslint",
-    "test": "npm run lint",
-    "build": "rolldown --config build/rolldown-config.js",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run lint && npm run typecheck",
+    "build": "rolldown --config build/rolldown-config.js && tsc",
     "prepublishOnly": "npm run build"
   },
   "license": "BSD-2-Clause",
@@ -42,7 +49,8 @@
     "eslint-config-mourner": "^5.0.2",
     "eslint-plugin-baseline-js": "^0.7.7",
     "eslint-plugin-html": "^8.2.1",
-    "leaflet": "^1.9.4",
-    "rolldown": "^1.2.16"
+    "leaflet": "^2.0.0-beta.1",
+    "rolldown": "^1.2.16",
+    "typescript": "^7.0.2"
   }
 }
