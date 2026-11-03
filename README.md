@@ -1,95 +1,113 @@
-Leaflet.heat
-==========
+# Leaflet.heat
 
-A tiny, simple and fast [Leaflet](http://leafletjs.com) heatmap plugin.
-Uses [simpleheat](https://github.com/mourner/simpleheat) under the hood,
-additionally clustering points into a grid for performance.
+A tiny, simple and fast [Leaflet](https://leafletjs.com) heatmap plugin. Uses
+[simpleheat](https://github.com/mourner/simpleheat) under the hood, additionally clustering points into a grid for
+performance. Works with Leaflet 1.9 and 2.0.
 
+[![Build Status](https://github.com/Leaflet/Leaflet.heat/actions/workflows/ci.yml/badge.svg)](https://github.com/Leaflet/Leaflet.heat/actions)
 
 ## Demos
 
-- [10,000 points &rarr;](http://leaflet.github.io/Leaflet.heat/demo)
-- [Adding points dynamically &rarr;](http://leaflet.github.io/Leaflet.heat/demo/draw.html)
+- [10,000 points &rarr;](https://leaflet.github.io/Leaflet.heat/demo/)
+- [Adding points dynamically &rarr;](https://leaflet.github.io/Leaflet.heat/demo/draw.html)
+- [Leaflet 1.9 as an ES module &rarr;](https://leaflet.github.io/Leaflet.heat/demo/v1.html)
+- [Leaflet 1.9 with plain scripts &rarr;](https://leaflet.github.io/Leaflet.heat/demo/global.html)
 
-
-## Basic Usage
+## Usage
 
 ```js
-var heat = L.heatLayer([
-	[50.5, 30.5, 0.2], // lat, lng, intensity
-	[50.6, 30.4, 0.5],
-	...
+import {HeatLayer} from 'leaflet.heat';
+
+const heat = new HeatLayer([
+    [50.5, 30.5, 0.2], // lat, lng, intensity
+    [50.6, 30.4, 0.5],
+    ...
 ], {radius: 25}).addTo(map);
 ```
 
-To include the plugin, just use `leaflet-heat.js` from the `dist` folder:
+Install with `npm install leaflet.heat`. TypeScript types are included (for Leaflet 2.0).
+
+### From a CDN
+
+With Leaflet 2.0, map `leaflet` in an import map and import the plugin's ES module build, which includes simpleheat:
 
 ```html
-<script src="leaflet-heat.js"></script>
+<script type="importmap">
+    {"imports": {"leaflet": "https://cdn.jsdelivr.net/npm/leaflet@2.0.0-beta.1/dist/leaflet.js"}}
+</script>
+<script type="module">
+    import {LeafletMap, TileLayer} from 'leaflet';
+    import {HeatLayer} from 'https://cdn.jsdelivr.net/npm/leaflet.heat@1.0.0/dist/leaflet-heat.js';
+</script>
 ```
 
-## Building
-To build the dist files run:
-```npm install && npm run prepublish```
+Leaflet 1.9 has no ES module package entry, so map `leaflet` to its ESM build explicitly:
 
+```json
+{"imports": {"leaflet": "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet-src.esm.js"}}
+```
+
+### As a plain script
+
+`leaflet-heat-global.js` reads Leaflet from the global `L` and adds `L.HeatLayer` to it. Load it after Leaflet 1.9's
+`leaflet.js`:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.heat@1.0.0/dist/leaflet-heat-global.js"></script>
+<script>
+    const heat = L.heatLayer(points, {radius: 25}).addTo(map);
+</script>
+```
+
+Or after Leaflet 2.0's `leaflet-global.js`, which has no factory functions, so use `new L.HeatLayer(points)` there.
+The `L.heatLayer` factory is only added on Leaflet 1.x.
 
 ## Reference
 
-#### L.heatLayer(latlngs, options)
+#### new HeatLayer(latlngs, options?)
 
-Constructs a heatmap layer given an array of points and an object with the following options:
-- **minOpacity** - the minimum opacity the heat will start at
-- **maxZoom** - zoom level where the points reach maximum intensity (as intensity scales with zoom),
-  equals `maxZoom` of the map by default
-- **max** - maximum point intensity, `1.0` by default
-- **radius** - radius of each "point" of the heatmap, `25` by default
-- **blur** - amount of blur, `15` by default
-- **gradient** - color gradient config, e.g. `{0.4: 'blue', 0.65: 'lime', 1: 'red'}`
-- **pane** - Map pane where the heat will be drawn. Defaults to 'overlayPane'.
+Creates a heatmap layer from an array of points. Each point can be an array like `[50.5, 30.5, 0.5]` (the third
+element being the intensity), a `{lat, lng, alt}` object, or a `LatLng`, with the intensity in `alt`. Intensity is 1
+if not set.
 
-Each point in the input array can be either an array like `[50.5, 30.5, 0.5]`,
-or a [Leaflet LatLng object](http://leafletjs.com/reference.html#latlng).
+Options:
 
-Optional third argument in each `LatLng` point (`altitude`) represents point intensity.
-Unless `max` option is specified, intensity should range between `0.0` and `1.0`.
+- **radius**: radius of each point, `25` by default.
+- **blur**: amount of blur, `15` by default.
+- **minOpacity**: the minimum opacity the heat will start at, `0.05` by default.
+- **max**: intensity that maps to the end of the gradient, `1` by default.
+- **maxZoom**: zoom level where points reach full intensity, the map's `maxZoom` by default.
+- **gradient**: color gradient config, e.g. `{0.4: 'blue', 0.65: 'lime', 1: 'red'}`.
+- **pane**: map pane where the heat will be drawn, `'overlayPane'` by default.
 
+Points close to each other are merged into grid cells of `(radius + blur) / 2` pixels, and their intensities are
+summed. Below `maxZoom`, each point's intensity is halved per zoom level. So at lower zooms, `max` is compared
+against the total of all points in a cell, not against single points.
 
 #### Methods
 
-- **setOptions(options)**: Sets new heatmap options and redraws it.
-- **addLatLng(latlng)**: Adds a new point to the heatmap and redraws it.
-- **setLatLngs(latlngs)**: Resets heatmap data and redraws it.
-- **redraw()**: Redraws the heatmap.
+- **setLatLngs(latlngs)**: replaces the heatmap data and redraws it.
+- **addLatLng(latlng)**: adds a point and redraws the heatmap.
+- **setOptions(options)**: sets new options and redraws the heatmap.
+- **redraw()**: redraws the heatmap on the next animation frame. Several calls before that frame make a single
+  redraw.
+- **getBounds()**: returns the `LatLngBounds` of all points.
+
+## Compatibility
+
+Leaflet.heat supports Leaflet 1.9 and 2.0 from the same code. It uses a few private map methods that exist in both,
+`_getMapPanePos`, `_getCenterOffset` and `_zoomAnimated`, so a future Leaflet version that changes them may need a
+plugin update.
+
+## Upgrading from 0.2
+
+- The package is an ES module and exports the `HeatLayer` class. It no longer sets globals; use
+  `dist/leaflet-heat-global.js` for that.
+- `dist/leaflet-heat.js` is now the ES module build. The plain script is `dist/leaflet-heat-global.js`.
+- `L.heatLayer(...)` only exists in the plain script build on Leaflet 1.x. Use `new HeatLayer(...)` elsewhere.
+- Leaflet 1.9 or later is required.
 
 ## Changelog
 
-### 0.2.0 &mdash; Oct 26, 2015
-
-- Fixed intensity to work properly with `max` option.
-- Fixed zoom animation on Leaflet 1.0 beta 2.
-- Fixed tiles and point intensity in demos.
-
-#### 0.1.3 &mdash; Nov 25, 2015
-
-- Fixed some edge cases when handling point intensity.
-- Added `minOpacity` option.
-
-#### 0.1.2 &mdash; Nov 5, 2014
-
-- Added compatibility with Leaflet 0.8-dev.
-
-#### 0.1.1 &mdash; Apr 22, 2014
-
-- Fixed overlaying two heatmaps on top of each other.
-- Fixed rare animation issues.
-
-#### 0.1.0 &mdash; Feb 3, 2014
-
-- Added `addLatLng`, `setLatlngs`, `setOptions` and `redraw` methods.
-- Added `max` option and support for different point intensity values (through `LatLng` third argument).
-- Added `gradient` option to customize colors.
-
-#### 0.0.1 &mdash; Jan 31, 2014
-
-- Initial release.
-
+See [CHANGELOG.md](CHANGELOG.md).
