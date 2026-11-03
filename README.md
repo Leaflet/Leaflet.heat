@@ -96,9 +96,7 @@ against the total of all points in a cell, not against single points.
 
 ## Compatibility
 
-Leaflet.heat supports Leaflet 1.9 and 2.0 from the same code. It uses a few private map methods that exist in both,
-`_getMapPanePos`, `_getCenterOffset` and `_zoomAnimated`, so a future Leaflet version that changes them may need a
-plugin update.
+Leaflet.heat supports Leaflet 1.9 and 2.0 from the same code, using only public Leaflet APIs.
 
 ## Upgrading from 0.2
 

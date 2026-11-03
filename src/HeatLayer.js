@@ -2,7 +2,7 @@ import * as L from 'leaflet';
 import SimpleHeat from 'simpleheat';
 
 /** @import {HeatGradient, HeatPoint} from 'simpleheat' */
-/** @import {LatLng, LatLngLiteral, LatLngTuple, LayerOptions, MapListeners, ZoomAnimEvent} from 'leaflet' */
+/** @import {LatLng, LatLngLiteral, LatLngTuple, LayerOptions, MapListeners, Point, ZoomAnimEvent} from 'leaflet' */
 
 /**
  * @typedef {object} HeatLayerProps
@@ -31,6 +31,8 @@ export class HeatLayer extends L.Layer {
     _canvas;
     /** @type {SimpleHeat} */
     _heat;
+    /** Canvas position in layer pixels, set on each moveend. @type {Point} */
+    _topLeft;
     /** @type {number | null} */
     _frame = null;
 
@@ -78,13 +80,9 @@ export class HeatLayer extends L.Layer {
         return this;
     }
 
+    /** @returns {MapListeners} */
     getEvents() {
-        /** @type {MapListeners} */
-        const events = {moveend: this._reset};
-        if (this._zoomAnimated) {
-            events.zoomanim = this._animateZoom;
-        }
-        return events;
+        return {moveend: this._reset, zoomanim: this._animateZoom};
     }
 
     onAdd() {
@@ -102,8 +100,7 @@ export class HeatLayer extends L.Layer {
 
     _initCanvas() {
         const canvas = this._canvas = document.createElement('canvas');
-        canvas.classList.add('leaflet-heatmap-layer', 'leaflet-layer', `leaflet-zoom-${this._zoomAnimated ? 'animated' : 'hide'}`);
-        canvas.style.transformOrigin = '50% 50%';
+        canvas.classList.add('leaflet-heatmap-layer', 'leaflet-layer', 'leaflet-zoom-animated');
 
         const size = this._map.getSize();
         canvas.width = size.x;
@@ -123,8 +120,8 @@ export class HeatLayer extends L.Layer {
     }
 
     _reset() {
-        const topLeft = this._map.containerPointToLayerPoint([0, 0]);
-        L.DomUtil.setPosition(this._canvas, topLeft);
+        this._topLeft = this._map.containerPointToLayerPoint([0, 0]);
+        L.DomUtil.setPosition(this._canvas, this._topLeft);
 
         const size = this._map.getSize();
         if (this._canvas.width !== size.x) {
@@ -149,16 +146,18 @@ export class HeatLayer extends L.Layer {
 
         const map = this._map;
         const r = /** @type {number} */ (this._heat._r);
-        const size = map.getSize();
-        const maxX = size.x + r;
-        const maxY = size.y + r;
+        const maxX = this._canvas.width + r;
+        const maxY = this._canvas.height + r;
 
         const maxZoom = this.options.maxZoom ?? map.getMaxZoom();
         const v = 1 / 2 ** Math.max(0, Math.min(maxZoom - map.getZoom(), 12));
         const cellSize = r / 2;
-        const panePos = map._getMapPanePos();
-        const offsetX = panePos.x % cellSize;
-        const offsetY = panePos.y % cellSize;
+
+        // points are projected relative to the canvas rather than the view, which differ until moveend (e.g. while
+        // dragging); cells are aligned to layer pixels so that they don't shift as the map is panned
+        const {x: left, y: top} = this._topLeft;
+        const offsetX = left % cellSize;
+        const offsetY = top % cellSize;
 
         // cells are [x, y, intensity] with x/y averaged by intensity; data holds the same arrays as the grid
         /** @type {HeatPoint[][]} */
@@ -167,21 +166,24 @@ export class HeatLayer extends L.Layer {
         const data = [];
 
         for (const latlng of this._latlngs) {
-            const p = map.latLngToContainerPoint(latlng);
-            if (p.x < -r || p.y < -r || p.x > maxX || p.y > maxY) continue;
+            const p = map.latLngToLayerPoint(latlng);
+            const px = p.x - left;
+            const py = p.y - top;
+            if (px < -r || py < -r || px > maxX || py > maxY) continue;
 
-            const x = Math.floor((p.x - offsetX) / cellSize) + 2;
-            const y = Math.floor((p.y - offsetY) / cellSize) + 2;
+            // non-negative indices, since px + offsetX > -3 * cellSize
+            const x = Math.floor((px + offsetX) / cellSize) + 3;
+            const y = Math.floor((py + offsetY) / cellSize) + 3;
             const k = ((Array.isArray(latlng) ? latlng[2] : latlng.alt) ?? 1) * v;
 
             const row = grid[y] ??= [];
             const cell = row[x];
 
             if (!cell) {
-                data.push(row[x] = [p.x, p.y, k]);
+                data.push(row[x] = [px, py, k]);
             } else {
-                cell[0] = (cell[0] * cell[2] + p.x * k) / (cell[2] + k);
-                cell[1] = (cell[1] * cell[2] + p.y * k) / (cell[2] + k);
+                cell[0] = (cell[0] * cell[2] + px * k) / (cell[2] + k);
+                cell[1] = (cell[1] * cell[2] + py * k) / (cell[2] + k);
                 cell[2] += k;
             }
         }
@@ -191,8 +193,12 @@ export class HeatLayer extends L.Layer {
 
     /** @param {ZoomAnimEvent} e */
     _animateZoom(e) {
-        const scale = this._map.getZoomScale(e.zoom);
-        const offset = this._map._getCenterOffset(e.center)._multiplyBy(-scale).subtract(this._map._getMapPanePos());
+        // the zoom center ends up at the view center, and the canvas corner (transform-origin 0 0 from leaflet.css)
+        // keeps its distance to it, scaled
+        const map = this._map;
+        const scale = map.getZoomScale(e.zoom);
+        const viewCenter = map.containerPointToLayerPoint(map.getSize().divideBy(2));
+        const offset = viewCenter.subtract(map.latLngToLayerPoint(e.center).subtract(this._topLeft).multiplyBy(scale));
         L.DomUtil.setTransform(this._canvas, offset, scale);
     }
 }

@@ -1,6 +1,7 @@
 import {afterEach, beforeEach, describe, expect, inject, it, vi} from 'vitest';
 import * as L from 'leaflet';
 import {HeatLayer} from '../src/HeatLayer.js';
+import 'leaflet/dist/leaflet.css';
 
 const LeafletMap = L.LeafletMap ?? L.Map;
 const nextFrame = () => new Promise(requestAnimationFrame);
@@ -100,6 +101,27 @@ describe('HeatLayer', () => {
         const layer = new HeatLayer([at(100, 100)], {maxZoom: 10}).addTo(map);
         map.panBy([30, 50], {animate: false});
         expectData(layer, [[70, 50, 1]]);
+    });
+
+    it('draws where the canvas is when redrawn before moveend, e.g. while dragging', () => {
+        const layer = new HeatLayer([at(100, 100)], {maxZoom: 10}).addTo(map);
+        L.DomUtil.setPosition(map.getPane('mapPane'), new L.Point(-30, -50));
+        layer._redraw();
+        expectData(layer, [[100, 100, 1]]);
+    });
+
+    it('scales the canvas around the zoom center during zoom animation', () => {
+        const layer = new HeatLayer([]).addTo(map);
+        map.panBy([30, 50], {animate: false});
+        map.fire('zoomanim', {center: map.containerPointToLatLng([300, 100]), zoom: 12, noUpdate: false});
+
+        // a canvas pixel should land where its location is in the new view: scaled 4x away from (300, 100), which
+        // becomes the view center
+        const box = layer._canvas.getBoundingClientRect();
+        const mapBox = container.getBoundingClientRect();
+        expect(box.width).toBeCloseTo(1600, 3);
+        expect(box.left - mapBox.left).toBeCloseTo(200 - 300 * 4, 3);
+        expect(box.top - mapBox.top).toBeCloseTo(150 - 100 * 4, 3);
     });
 
     it('draws pixels around points', () => {
