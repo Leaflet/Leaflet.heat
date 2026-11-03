@@ -38,19 +38,24 @@
   "scripts": {
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "npm run lint && npm run typecheck",
+    "test": "npm run lint && npm run test:types && vitest run",
     "build": "rolldown --config build/rolldown-config.js && tsc",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test:types": "tsc && tsc -p test/types"
   },
   "license": "BSD-2-Clause",
   "devDependencies": {
     "@eslint/compat": "^2.1.1",
+    "@vitest/browser-playwright": "^5.1.0",
     "eslint": "^10.14.0",
     "eslint-config-mourner": "^5.0.2",
     "eslint-plugin-baseline-js": "^0.7.7",
     "eslint-plugin-html": "^8.2.1",
     "leaflet": "^2.0.0-beta.1",
+    "leaflet-v1": "npm:leaflet@^1.9.4",
+    "playwright": "^1.64.1",
     "rolldown": "^1.2.16",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
   }
 }
