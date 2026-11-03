@@ -1,6 +1,7 @@
-'use strict';
+import * as L from 'leaflet';
+import SimpleHeat from 'simpleheat';
 
-L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
+export class HeatLayer extends L.Layer {
 
     // options: {
     //     minOpacity: 0.05,
@@ -10,208 +11,152 @@ L.HeatLayer = (L.Layer ? L.Layer : L.Class).extend({
     //     max: 1.0
     // },
 
-    initialize: function (latlngs, options) {
+    constructor(latlngs, options) {
+        super();
         this._latlngs = latlngs;
-        L.setOptions(this, options);
-    },
+        L.Util.setOptions(this, options);
+    }
 
-    setLatLngs: function (latlngs) {
+    setLatLngs(latlngs) {
         this._latlngs = latlngs;
         return this.redraw();
-    },
+    }
 
-    addLatLng: function (latlng) {
+    addLatLng(latlng) {
         this._latlngs.push(latlng);
         return this.redraw();
-    },
+    }
 
-    setOptions: function (options) {
-        L.setOptions(this, options);
+    setOptions(options) {
+        L.Util.setOptions(this, options);
         if (this._heat) {
             this._updateOptions();
         }
         return this.redraw();
-    },
-    
-    getBounds: function () {
-        return L.latLngBounds(this._latlngs);  
-    },
-    
-    redraw: function () {
-        if (this._heat && !this._frame && this._map && !this._map._animating) {
-            this._frame = L.Util.requestAnimFrame(this._redraw, this);
+    }
+
+    getBounds() {
+        return new L.LatLngBounds(this._latlngs);
+    }
+
+    redraw() {
+        if (this._heat && !this._frame && this._map) {
+            this._frame = requestAnimationFrame(() => this._redraw());
         }
         return this;
-    },
+    }
 
-    onAdd: function (map) {
-        this._map = map;
+    getEvents() {
+        const events = {moveend: this._reset};
+        if (this._zoomAnimated) {
+            events.zoomanim = this._animateZoom;
+        }
+        return events;
+    }
 
+    onAdd() {
         if (!this._canvas) {
             this._initCanvas();
         }
-
-        if (this.options.pane) {
-            this.getPane().appendChild(this._canvas);
-        }else{
-            map._panes.overlayPane.appendChild(this._canvas);
-        }
-
-        map.on('moveend', this._reset, this);
-
-        if (map.options.zoomAnimation && L.Browser.any3d) {
-            map.on('zoomanim', this._animateZoom, this);
-        }
-
+        this.getPane().appendChild(this._canvas);
         this._reset();
-    },
+    }
 
-    onRemove: function (map) {
-        if (this.options.pane) {
-            this.getPane().removeChild(this._canvas);
-        }else{
-            map.getPanes().overlayPane.removeChild(this._canvas);
-        }
+    onRemove() {
+        this._canvas.remove();
+        this._cancelFrame();
+    }
 
-        map.off('moveend', this._reset, this);
+    _initCanvas() {
+        const canvas = this._canvas = document.createElement('canvas');
+        canvas.classList.add('leaflet-heatmap-layer', 'leaflet-layer', `leaflet-zoom-${this._zoomAnimated ? 'animated' : 'hide'}`);
+        canvas.style.transformOrigin = '50% 50%';
 
-        if (map.options.zoomAnimation) {
-            map.off('zoomanim', this._animateZoom, this);
-        }
-    },
-
-    addTo: function (map) {
-        map.addLayer(this);
-        return this;
-    },
-
-    _initCanvas: function () {
-        var canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer leaflet-layer');
-
-        var originProp = L.DomUtil.testProp(['transformOrigin', 'WebkitTransformOrigin', 'msTransformOrigin']);
-        canvas.style[originProp] = '50% 50%';
-
-        var size = this._map.getSize();
-        canvas.width  = size.x;
+        const size = this._map.getSize();
+        canvas.width = size.x;
         canvas.height = size.y;
 
-        var animated = this._map.options.zoomAnimation && L.Browser.any3d;
-        L.DomUtil.addClass(canvas, 'leaflet-zoom-' + (animated ? 'animated' : 'hide'));
-
-        this._heat = simpleheat(canvas);
+        this._heat = new SimpleHeat(canvas);
         this._updateOptions();
-    },
+    }
 
-    _updateOptions: function () {
-        this._heat.radius(this.options.radius || this._heat.defaultRadius, this.options.blur);
+    _updateOptions() {
+        this._heat.radius(this.options.radius, this.options.blur);
+        this._heat.max(this.options.max ?? 1);
 
         if (this.options.gradient) {
             this._heat.gradient(this.options.gradient);
         }
-        if (this.options.max) {
-            this._heat.max(this.options.max);
-        }
-    },
+    }
 
-    _reset: function () {
-        var topLeft = this._map.containerPointToLayerPoint([0, 0]);
+    _reset() {
+        const topLeft = this._map.containerPointToLayerPoint([0, 0]);
         L.DomUtil.setPosition(this._canvas, topLeft);
 
-        var size = this._map.getSize();
-
-        if (this._heat._width !== size.x) {
-            this._canvas.width = this._heat._width  = size.x;
+        const size = this._map.getSize();
+        if (this._canvas.width !== size.x) {
+            this._canvas.width = size.x;
         }
-        if (this._heat._height !== size.y) {
-            this._canvas.height = this._heat._height = size.y;
+        if (this._canvas.height !== size.y) {
+            this._canvas.height = size.y;
         }
 
         this._redraw();
-    },
+    }
 
-    _redraw: function () {
-        if (!this._map) {
-            return;
-        }
-        var data = [],
-            r = this._heat._r,
-            size = this._map.getSize(),
-            bounds = new L.Bounds(
-                L.point([-r, -r]),
-                size.add([r, r])),
-
-            max = this.options.max === undefined ? 1 : this.options.max,
-            maxZoom = this.options.maxZoom === undefined ? this._map.getMaxZoom() : this.options.maxZoom,
-            v = 1 / Math.pow(2, Math.max(0, Math.min(maxZoom - this._map.getZoom(), 12))),
-            cellSize = r / 2,
-            grid = [],
-            panePos = this._map._getMapPanePos(),
-            offsetX = panePos.x % cellSize,
-            offsetY = panePos.y % cellSize,
-            i, len, p, cell, x, y, j, len2, k;
-
-        // console.time('process');
-        for (i = 0, len = this._latlngs.length; i < len; i++) {
-            p = this._map.latLngToContainerPoint(this._latlngs[i]);
-            if (bounds.contains(p)) {
-                x = Math.floor((p.x - offsetX) / cellSize) + 2;
-                y = Math.floor((p.y - offsetY) / cellSize) + 2;
-
-                var alt =
-                    this._latlngs[i].alt !== undefined ? this._latlngs[i].alt :
-                    this._latlngs[i][2] !== undefined ? +this._latlngs[i][2] : 1;
-                k = alt * v;
-
-                grid[y] = grid[y] || [];
-                cell = grid[y][x];
-
-                if (!cell) {
-                    grid[y][x] = [p.x, p.y, k];
-
-                } else {
-                    cell[0] = (cell[0] * cell[2] + p.x * k) / (cell[2] + k); // x
-                    cell[1] = (cell[1] * cell[2] + p.y * k) / (cell[2] + k); // y
-                    cell[2] += k; // cumulated intensity value
-                }
-            }
-        }
-
-        for (i = 0, len = grid.length; i < len; i++) {
-            if (grid[i]) {
-                for (j = 0, len2 = grid[i].length; j < len2; j++) {
-                    cell = grid[i][j];
-                    if (cell) {
-                        data.push([
-                            Math.round(cell[0]),
-                            Math.round(cell[1]),
-                            Math.min(cell[2], max)
-                        ]);
-                    }
-                }
-            }
-        }
-        // console.timeEnd('process');
-
-        // console.time('draw ' + data.length);
-        this._heat.data(data).draw(this.options.minOpacity);
-        // console.timeEnd('draw ' + data.length);
-
-        this._frame = null;
-    },
-
-    _animateZoom: function (e) {
-        var scale = this._map.getZoomScale(e.zoom),
-            offset = this._map._getCenterOffset(e.center)._multiplyBy(-scale).subtract(this._map._getMapPanePos());
-
-        if (L.DomUtil.setTransform) {
-            L.DomUtil.setTransform(this._canvas, offset, scale);
-
-        } else {
-            this._canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString(offset) + ' scale(' + scale + ')';
+    _cancelFrame() {
+        if (this._frame) {
+            cancelAnimationFrame(this._frame);
+            this._frame = null;
         }
     }
-});
 
-L.heatLayer = function (latlngs, options) {
-    return new L.HeatLayer(latlngs, options);
-};
+    _redraw() {
+        this._cancelFrame();
+
+        const map = this._map;
+        const r = this._heat._r;
+        const size = map.getSize();
+        const maxX = size.x + r;
+        const maxY = size.y + r;
+
+        const maxZoom = this.options.maxZoom ?? map.getMaxZoom();
+        const v = 1 / 2 ** Math.max(0, Math.min(maxZoom - map.getZoom(), 12));
+        const cellSize = r / 2;
+        const panePos = map._getMapPanePos();
+        const offsetX = panePos.x % cellSize;
+        const offsetY = panePos.y % cellSize;
+
+        // cells are [x, y, intensity] with x/y averaged by intensity; data holds the same arrays as the grid
+        const grid = [];
+        const data = [];
+
+        for (const latlng of this._latlngs) {
+            const p = map.latLngToContainerPoint(latlng);
+            if (p.x < -r || p.y < -r || p.x > maxX || p.y > maxY) continue;
+
+            const x = Math.floor((p.x - offsetX) / cellSize) + 2;
+            const y = Math.floor((p.y - offsetY) / cellSize) + 2;
+            const k = (latlng.alt ?? latlng[2] ?? 1) * v;
+
+            const row = grid[y] ??= [];
+            const cell = row[x];
+
+            if (!cell) {
+                data.push(row[x] = [p.x, p.y, k]);
+            } else {
+                cell[0] = (cell[0] * cell[2] + p.x * k) / (cell[2] + k);
+                cell[1] = (cell[1] * cell[2] + p.y * k) / (cell[2] + k);
+                cell[2] += k;
+            }
+        }
+
+        this._heat.data(data).draw(this.options.minOpacity);
+    }
+
+    _animateZoom(e) {
+        const scale = this._map.getZoomScale(e.zoom);
+        const offset = this._map._getCenterOffset(e.center)._multiplyBy(-scale).subtract(this._map._getMapPanePos());
+        L.DomUtil.setTransform(this._canvas, offset, scale);
+    }
+}
