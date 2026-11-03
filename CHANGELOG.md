@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 &mdash; unreleased
+## 1.0.0 &mdash; 3 Nov, 2026
 
 Breaking:
 

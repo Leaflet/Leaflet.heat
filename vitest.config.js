@@ -10,7 +10,8 @@ export default defineConfig({
         include: ['test/**/*.test.js'],
         browser: {
             enabled: true,
-            provider: playwright(),
+            // in CI, use the Chrome that GitHub runners come with instead of downloading Playwright's build (~3 min)
+            provider: playwright({launchOptions: {channel: process.env.CI ? 'chrome' : undefined}}),
             headless: true,
             screenshotFailures: false,
             instances: [{browser: 'chromium'}]
