@@ -64,17 +64,17 @@ describe('HeatLayer', () => {
 
     it('accepts arrays, LatLngs and objects, with intensity defaulting to 1', () => {
         const [lat, lng] = at(300, 200);
+        const [lat2, lng2] = at(340, 260);
         const layer = new HeatLayer([
             at(20, 20),
             at(100, 20, 0.5),
             at(180, 20, null),
             new L.LatLng(...at(260, 20), 0.25),
             {lat, lng, alt: 0.75},
-            {lat: lat + 0.1, lng}
+            {lat: lat2, lng: lng2}
         ], {maxZoom: 10}).addTo(map);
 
-        const y = map.latLngToContainerPoint([lat + 0.1, lng]).y;
-        expectData(layer, [[20, 20, 1], [100, 20, 0.5], [180, 20, 1], [260, 20, 0.25], [300, 200, 0.75], [300, y, 1]]);
+        expectData(layer, [[20, 20, 1], [100, 20, 0.5], [180, 20, 1], [260, 20, 0.25], [300, 200, 0.75], [340, 260, 1]]);
     });
 
     it('merges points in the same cell, summing intensity and averaging position by it', () => {
@@ -122,6 +122,51 @@ describe('HeatLayer', () => {
         expect(box.width).toBeCloseTo(1600, 3);
         expect(box.left - mapBox.left).toBeCloseTo(200 - 300 * 4, 3);
         expect(box.top - mapBox.top).toBeCloseTo(150 - 100 * 4, 3);
+    });
+
+    it('projects points added to the array, and changed in place after redraw()', async () => {
+        const points = [at(100, 100)];
+        const layer = new HeatLayer(points, {maxZoom: 10}).addTo(map);
+
+        layer.addLatLng(at(200, 100));
+        points.push(at(300, 100));
+        await nextFrame();
+        expectData(layer, [[100, 100, 1], [200, 100, 1], [300, 100, 1]]);
+
+        points[0] = at(100, 200);
+        map.fire('moveend');
+        expectData(layer, [[100, 100, 1], [200, 100, 1], [300, 100, 1]]);
+
+        layer.redraw();
+        await nextFrame();
+        expectData(layer, [[200, 100, 1], [300, 100, 1], [100, 200, 1]]);
+
+        points.length = 1;
+        map.fire('moveend');
+        expectData(layer, [[100, 200, 1]]);
+    });
+
+    it('reprojects points on a map with a different CRS', () => {
+        const point = at(100, 100);
+        const layer = new HeatLayer([point], {maxZoom: 10}).addTo(map);
+        layer.remove();
+
+        const container2 = document.createElement('div');
+        container2.style.cssText = 'width: 400px; height: 300px';
+        document.body.append(container2);
+        const map2 = new LeafletMap(container2, {crs: L.SimpleCRS ?? L.CRS.Simple}).setView([0, 0], 0).addLayer(layer);
+
+        // latLngToContainerPoint rounds
+        const {x, y} = map2.project(point).subtract(map2.getPixelOrigin()).subtract(map2.containerPointToLayerPoint([0, 0]));
+        expectData(layer, [[x, y, 1 / 2 ** 10]]);
+        map2.remove();
+        container2.remove();
+    });
+
+    it('skips points with zero intensity', () => {
+        const layer = new HeatLayer([at(101, 101, 0), at(109, 105, 0), at(300, 200, 0), at(301, 201)], {maxZoom: 10})
+            .addTo(map);
+        expectData(layer, [[301, 201, 1]]);
     });
 
     it('draws pixels around points', () => {

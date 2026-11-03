@@ -14,10 +14,13 @@ Changes:
 
 - Added Leaflet 2.0 support.
 - Added TypeScript types.
+- Much faster redraws on pan and zoom with many points, since points are projected only once (binning 1M points
+  takes ~6 ms instead of ~120 ms in Chrome).
 - Updated simpleheat to 1.0.
 - Defaults are set as class options (`radius: 25`, `blur: 15`, `minOpacity: 0.05`, `max: 1`).
 - A pending redraw is cancelled when the layer is removed.
 - A point with a `null` intensity now counts as 1 instead of 0, the same as a missing one.
+- Points with zero intensity are no longer drawn (a single one was drawn at `minOpacity` before).
 - Fixed a crash when the map container has zero width or height (#110, #95, #102).
 - Fixed a crash when the map uses a different Leaflet instance than the plugin (#144, #137).
 - Fixed points drawn out of place when the heatmap is redrawn while the map is being dragged.

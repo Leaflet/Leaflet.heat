@@ -91,7 +91,7 @@ against the total of all points in a cell, not against single points.
 - **addLatLng(latlng)**: adds a point and redraws the heatmap.
 - **setOptions(options)**: sets new options and redraws the heatmap.
 - **redraw()**: redraws the heatmap on the next animation frame. Several calls before that frame make a single
-  redraw.
+  redraw. Call it after changing points in the array in place; points added to its end are picked up on any redraw.
 - **getBounds()**: returns the `LatLngBounds` of all points.
 
 ## Compatibility

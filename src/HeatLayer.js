@@ -36,6 +36,14 @@ export class HeatLayer extends L.Layer {
     /** @type {number | null} */
     _frame = null;
 
+    // points projected at zoom 0 as x, y, intensity triples, so that redraws only scale them (CRS transformations
+    // are linear in scale); points past _projected are projected on the next redraw, and all after redraw()
+    _points = new Float64Array(0);
+    _projected = 0;
+
+    // a grid of cells reused between redraws, each an intensity-weighted x and y sum and an intensity sum
+    _cells = new Float64Array(0);
+
     /**
      * @param {HeatLatLng[]} latlngs
      * @param {HeatLayerOptions} [options]
@@ -49,13 +57,14 @@ export class HeatLayer extends L.Layer {
     /** Replaces the points and redraws. @param {HeatLatLng[]} latlngs */
     setLatLngs(latlngs) {
         this._latlngs = latlngs;
-        return this.redraw();
+        this._projected = 0;
+        return this._requestRedraw();
     }
 
     /** Adds a point and redraws. @param {HeatLatLng} latlng */
     addLatLng(latlng) {
         this._latlngs.push(latlng);
-        return this.redraw();
+        return this._requestRedraw();
     }
 
     /** Updates options and redraws. @param {HeatLayerOptions} options */
@@ -64,7 +73,7 @@ export class HeatLayer extends L.Layer {
         if (this._heat) {
             this._updateOptions();
         }
-        return this.redraw();
+        return this._requestRedraw();
     }
 
     /** Bounds of all points. */
@@ -72,8 +81,16 @@ export class HeatLayer extends L.Layer {
         return new L.LatLngBounds(this._latlngs);
     }
 
-    /** Redraws on the next animation frame, once however many times it's called before that. */
+    /**
+     * Redraws on the next animation frame, once however many times it's called before that. Call it after changing
+     * points in place, since they're only read again then.
+     */
     redraw() {
+        this._projected = 0;
+        return this._requestRedraw();
+    }
+
+    _requestRedraw() {
         if (this._heat && !this._frame && this._map) {
             this._frame = requestAnimationFrame(() => this._redraw());
         }
@@ -90,6 +107,7 @@ export class HeatLayer extends L.Layer {
             this._initCanvas();
         }
         this.getPane().appendChild(this._canvas);
+        this._projected = 0; // the map may have a different CRS
         this._reset();
     }
 
@@ -143,52 +161,88 @@ export class HeatLayer extends L.Layer {
 
     _redraw() {
         this._cancelFrame();
+        this._project();
 
         const map = this._map;
         const r = /** @type {number} */ (this._heat._r);
-        const maxX = this._canvas.width + r;
-        const maxY = this._canvas.height + r;
+        const {width, height} = this._canvas;
+        const maxX = width + r;
+        const maxY = height + r;
 
+        const zoom = map.getZoom();
         const maxZoom = this.options.maxZoom ?? map.getMaxZoom();
-        const v = 1 / 2 ** Math.max(0, Math.min(maxZoom - map.getZoom(), 12));
+        const v = 1 / 2 ** Math.max(0, Math.min(maxZoom - zoom, 12));
         const cellSize = r / 2;
 
-        // points are projected relative to the canvas rather than the view, which differ until moveend (e.g. while
+        // points are drawn relative to the canvas rather than the view, which differ until moveend (e.g. while
         // dragging); cells are aligned to layer pixels so that they don't shift as the map is panned
         const {x: left, y: top} = this._topLeft;
         const offsetX = left % cellSize;
         const offsetY = top % cellSize;
 
-        // cells are [x, y, intensity] with x/y averaged by intensity; data holds the same arrays as the grid
-        /** @type {HeatPoint[][]} */
-        const grid = [];
-        /** @type {HeatPoint[]} */
-        const data = [];
+        // projected points times scale are pixels at the current zoom, where the canvas corner is at origin
+        const scale = map.getZoomScale(zoom, 0);
+        const {x: originX, y: originY} = map.getPixelOrigin().add(this._topLeft);
 
-        for (const latlng of this._latlngs) {
-            const p = map.latLngToLayerPoint(latlng);
-            const px = p.x - left;
-            const py = p.y - top;
+        // with -r <= px <= width + r and |offsetX| < cellSize = r / 2, column indices are from 0 to width / cellSize + 6
+        const cols = Math.ceil(width / cellSize) + 7;
+        const size = 3 * cols * (Math.ceil(height / cellSize) + 7);
+        if (this._cells.length < size) {
+            this._cells = new Float64Array(size);
+        } else {
+            this._cells.fill(0, 0, size);
+        }
+        const cells = this._cells;
+        const points = this._points;
+
+        for (let i = 0, n = this._projected * 3; i < n; i += 3) {
+            const px = points[i] * scale - originX;
+            const py = points[i + 1] * scale - originY;
             if (px < -r || py < -r || px > maxX || py > maxY) continue;
 
-            // non-negative indices, since px + offsetX > -3 * cellSize
-            const x = Math.floor((px + offsetX) / cellSize) + 3;
-            const y = Math.floor((py + offsetY) / cellSize) + 3;
-            const k = ((Array.isArray(latlng) ? latlng[2] : latlng.alt) ?? 1) * v;
+            const c = 3 * ((((py + offsetY) / cellSize + 3) | 0) * cols + (((px + offsetX) / cellSize + 3) | 0));
+            const k = points[i + 2];
+            cells[c] += px * k;
+            cells[c + 1] += py * k;
+            cells[c + 2] += k;
+        }
 
-            const row = grid[y] ??= [];
-            const cell = row[x];
-
-            if (!cell) {
-                data.push(row[x] = [px, py, k]);
-            } else {
-                cell[0] = (cell[0] * cell[2] + px * k) / (cell[2] + k);
-                cell[1] = (cell[1] * cell[2] + py * k) / (cell[2] + k);
-                cell[2] += k;
-            }
+        // cells are [x, y, intensity], with x and y averaged by intensity; points with zero intensity add no heat
+        /** @type {HeatPoint[]} */
+        const data = [];
+        for (let c = 0; c < size; c += 3) {
+            const k = cells[c + 2];
+            if (k) data.push([cells[c] / k, cells[c + 1] / k, k * v]);
         }
 
         this._heat.data(data).draw(this.options.minOpacity);
+    }
+
+    _project() {
+        const map = this._map;
+        const latlngs = this._latlngs;
+        const n = latlngs.length;
+
+        if (n < this._projected) this._projected = 0;
+        if (n === this._projected) return;
+
+        // grow by half when points are added, so that adding them one by one doesn't copy all on each redraw
+        const capacity = this._points.length / 3;
+        if (n > capacity || (this._projected === 0 && n < capacity / 2)) {
+            const points = new Float64Array(3 * (this._projected ? Math.max(n, Math.ceil(capacity * 1.5)) : n));
+            points.set(this._points.subarray(0, this._projected * 3));
+            this._points = points;
+        }
+
+        const points = this._points;
+        for (let i = this._projected; i < n; i++) {
+            const latlng = latlngs[i];
+            const p = map.project(latlng, 0);
+            points[3 * i] = p.x;
+            points[3 * i + 1] = p.y;
+            points[3 * i + 2] = (Array.isArray(latlng) ? latlng[2] : latlng.alt) ?? 1;
+        }
+        this._projected = n;
     }
 
     /** @param {ZoomAnimEvent} e */
