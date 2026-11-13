@@ -78,8 +78,12 @@ describe('HeatLayer', () => {
     });
 
     it('merges points in the same cell, summing intensity and averaging position by it', () => {
-        const layer = new HeatLayer([at(101, 101, 1), at(109, 105, 3), at(300, 200, 2)], {maxZoom: 10}).addTo(map);
-        expectData(layer, [[107, 104, 4], [300, 200, 2]]);
+        // cells are (radius + blur) / 2 = 20 px and aligned to absolute pixels; one starts at container (x, y)
+        const origin = map.getPixelOrigin();
+        const x = 100 - (origin.x + 100) % 20;
+        const y = 100 - (origin.y + 100) % 20;
+        const layer = new HeatLayer([at(x + 1, y + 1, 1), at(x + 9, y + 5, 3), at(300, 200, 2)], {maxZoom: 10}).addTo(map);
+        expectData(layer, [[x + 7, y + 4, 4], [300, 200, 2]]);
     });
 
     it('halves intensity per zoom level below maxZoom, falling back to the map maxZoom', () => {
@@ -122,6 +126,44 @@ describe('HeatLayer', () => {
         expect(box.width).toBeCloseTo(1600, 3);
         expect(box.left - mapBox.left).toBeCloseTo(200 - 300 * 4, 3);
         expect(box.top - mapBox.top).toBeCloseTo(150 - 100 * 4, 3);
+    });
+
+    it('follows the map on zoom events until moveend, drawing at the zoom it is scaled from', async () => {
+        // live zooms fire zoom on every frame, CSS zoom animations zoomanim at the start and zoom once at the end
+        const layer = new HeatLayer([at(100, 100)], {maxZoom: 10}).addTo(map);
+        const corner = map.containerPointToLatLng([0, 0]);
+        const frames = [];
+        let animTransform;
+
+        // the layer listens first, so this reads the transform it set for the end of a CSS zoom animation
+        map.on('zoomanim', () => { animTransform = layer._canvas.style.transform; });
+        map.on('zoom', () => {
+            // the transform zoomanim set is where the canvas already is when the animation ends
+            if (animTransform) expect(layer._canvas.style.transform).toBe(animTransform);
+            const box = layer._canvas.getBoundingClientRect();
+            const mapBox = container.getBoundingClientRect();
+            const {x, y} = map.latLngToContainerPoint(corner);
+            layer._redraw();
+            frames.push({
+                dx: box.left - mapBox.left - x,
+                dy: box.top - mapBox.top - y,
+                dw: box.width - 400 * map.getZoomScale(map.getZoom(), 10),
+                data: layer._heat._data.map(p => p.map(v => Math.round(v * 1e6) / 1e6))
+            });
+        });
+        await new Promise((resolve) => {
+            map.once('moveend', resolve);
+            map.setZoom(12, {animate: true});
+        });
+
+        expect(frames.length).toBeGreaterThan(0);
+        for (const {dx, dy, dw, data} of frames) {
+            expect(Math.abs(dx)).toBeLessThan(1);
+            expect(Math.abs(dy)).toBeLessThan(1);
+            expect(Math.abs(dw)).toBeLessThan(1e-3);
+            expect(data).toEqual([[100, 100, 1]]);
+        }
+        expect(layer._canvas.getBoundingClientRect().width).toBe(400);
     });
 
     it('projects points added to the array, and changed in place after redraw()', async () => {

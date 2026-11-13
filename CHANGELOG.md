@@ -1,6 +1,13 @@
 # Changelog
 
-## 1.0.0 &mdash; 3 Nov, 2026
+## 1.0.1 &mdash; Nov 13, 2026
+
+- The heatmap now scales and moves along with the map during pinch zoom and `flyTo`, instead of staying in place
+  until the zoom ends.
+- Fixed the heatmap showing at the wrong position and size until the zoom ends when its data or options change during
+  a zoom animation (e.g. with `setLatLngs` or `addLatLng`).
+
+## 1.0.0 &mdash; Nov 3, 2026
 
 Breaking:
 

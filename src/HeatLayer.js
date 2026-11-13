@@ -31,8 +31,12 @@ export class HeatLayer extends L.Layer {
     _canvas;
     /** @type {SimpleHeat} */
     _heat;
-    /** Canvas position in layer pixels, set on each moveend. @type {Point} */
-    _topLeft;
+    // the canvas is drawn at _zoom with its corner at the _origin absolute pixel, set on each moveend and scaled from
+    // them during zooms; redraws before the next moveend draw the same way, to match the transformed canvas
+    /** @type {number} */
+    _zoom;
+    /** @type {Point} */
+    _origin;
     /** @type {number | null} */
     _frame = null;
 
@@ -99,7 +103,7 @@ export class HeatLayer extends L.Layer {
 
     /** @returns {MapListeners} */
     getEvents() {
-        return {moveend: this._reset, zoomanim: this._animateZoom};
+        return {moveend: this._reset, zoom: this._onZoom, zoomanim: this._animateZoom};
     }
 
     onAdd() {
@@ -138,10 +142,13 @@ export class HeatLayer extends L.Layer {
     }
 
     _reset() {
-        this._topLeft = this._map.containerPointToLayerPoint([0, 0]);
-        L.DomUtil.setPosition(this._canvas, this._topLeft);
+        const map = this._map;
+        const topLeft = map.containerPointToLayerPoint([0, 0]);
+        this._zoom = map.getZoom();
+        this._origin = map.getPixelOrigin().add(topLeft);
+        L.DomUtil.setPosition(this._canvas, topLeft);
 
-        const size = this._map.getSize();
+        const size = map.getSize();
         if (this._canvas.width !== size.x) {
             this._canvas.width = size.x;
         }
@@ -169,20 +176,19 @@ export class HeatLayer extends L.Layer {
         const maxX = width + r;
         const maxY = height + r;
 
-        const zoom = map.getZoom();
+        const zoom = this._zoom;
         const maxZoom = this.options.maxZoom ?? map.getMaxZoom();
         const v = 1 / 2 ** Math.max(0, Math.min(maxZoom - zoom, 12));
         const cellSize = r / 2;
 
-        // points are drawn relative to the canvas rather than the view, which differ until moveend (e.g. while
-        // dragging); cells are aligned to layer pixels so that they don't shift as the map is panned
-        const {x: left, y: top} = this._topLeft;
-        const offsetX = left % cellSize;
-        const offsetY = top % cellSize;
-
-        // projected points times scale are pixels at the current zoom, where the canvas corner is at origin
+        // projected points times scale are absolute pixels at zoom, and minus origin pixels on the canvas, which
+        // differs from the view until moveend (e.g. while dragging)
         const scale = map.getZoomScale(zoom, 0);
-        const {x: originX, y: originY} = map.getPixelOrigin().add(this._topLeft);
+        const {x: originX, y: originY} = this._origin;
+
+        // cells are aligned to absolute pixels, so that they don't shift as the map is panned
+        const offsetX = originX % cellSize;
+        const offsetY = originY % cellSize;
 
         // with -r <= px <= width + r and |offsetX| < cellSize = r / 2, column indices are from 0 to width / cellSize + 6
         const cols = Math.ceil(width / cellSize) + 7;
@@ -245,15 +251,30 @@ export class HeatLayer extends L.Layer {
         this._projected = n;
     }
 
+    // live zooms fire zoom on every frame; CSS zoom animations (Leaflet 1.x and 2.0 betas) fire zoomanim once at
+    // the start with the target view, then zoom once at the end, which gives the same transform
+    _onZoom() {
+        this._updateTransform(this._map.getZoom(), this._map.getPixelOrigin());
+    }
+
     /** @param {ZoomAnimEvent} e */
     _animateZoom(e) {
-        // the zoom center ends up at the view center, and the canvas corner (transform-origin 0 0 from leaflet.css)
-        // keeps its distance to it, scaled
+        // the pixel origin the map will have at the end, rounded as Leaflet does for CSS zoom animations
         const map = this._map;
-        const scale = map.getZoomScale(e.zoom);
-        const viewCenter = map.containerPointToLayerPoint(map.getSize().divideBy(2));
-        const offset = viewCenter.subtract(map.latLngToLayerPoint(e.center).subtract(this._topLeft).multiplyBy(scale));
-        L.DomUtil.setTransform(this._canvas, offset, scale);
+        const viewHalf = map.getSize().divideBy(2);
+        const origin = map.project(e.center, e.zoom).subtract(viewHalf).subtract(map.containerPointToLayerPoint([0, 0]));
+        this._updateTransform(e.zoom, origin.round());
+    }
+
+    /**
+     * Scales the canvas from the zoom it was drawn at (transform-origin 0 0 from leaflet.css) and moves its corner to
+     * where it is at the given zoom and pixel origin.
+     * @param {number} zoom
+     * @param {Point} pixelOrigin
+     */
+    _updateTransform(zoom, pixelOrigin) {
+        const scale = this._map.getZoomScale(zoom, this._zoom);
+        L.DomUtil.setTransform(this._canvas, this._origin.multiplyBy(scale).subtract(pixelOrigin), scale);
     }
 }
 
