@@ -101,6 +101,25 @@ describe('HeatLayer', () => {
         expectData(layer, [[-30, 100, 1], [100, 330, 1]]);
     });
 
+    it('merges the same points at a zoom wherever the view was reset (#3)', () => {
+        const points = [];
+        for (let i = 0; i < 1000; i++) points.push(at(50 + (i * 37) % 300, 50 + (i * 53) % 200));
+        const layer = new HeatLayer(points, {maxZoom: 10}).addTo(map);
+
+        // cells in absolute pixels, within an area both views below cover
+        const o = layer._origin;
+        const cells = () => layer._heat._data
+            .map(([x, y, k]) => [x + layer._origin.x, y + layer._origin.y, k].map(v => Math.round(v * 1e6) / 1e6))
+            .filter(([x, y]) => x > o.x + 100 && x < o.x + 250 && y > o.y + 100 && y < o.y + 150);
+        const before = cells();
+        expect(before.length).toBeGreaterThan(10);
+
+        // as after zooming in and out around another point: the pixel origin moves by a fraction of a cell
+        map.setView(map.containerPointToLatLng([207, 159]), 10, {reset: true});
+        expect(layer._origin.x - o.x).toBe(7);
+        expect(cells()).toEqual(before);
+    });
+
     it('reprojects points on move', () => {
         const layer = new HeatLayer([at(100, 100)], {maxZoom: 10}).addTo(map);
         map.panBy([30, 50], {animate: false});

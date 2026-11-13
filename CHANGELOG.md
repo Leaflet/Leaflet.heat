@@ -6,6 +6,7 @@
   until the zoom ends.
 - Fixed the heatmap showing at the wrong position and size until the zoom ends when its data or options change during
   a zoom animation (e.g. with `setLatLngs` or `addLatLng`).
+- Fixed the heatmap looking different at the same zoom level depending on where you zoomed in or out (#3).
 
 ## 1.0.0 &mdash; Nov 3, 2026
 
